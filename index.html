@@ -255,7 +255,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 <div class="notif" id="notif"></div>
 
 <script>
-var API = 'https://script.google.com/macros/s/AKfycbzHLTFC2j8F4U6MBPW_Jc38daHIP5Os129eTHGl0jGJaxpGJdbLXCF_m1729lZj5SXq/exec';
+var API = 'https://script.google.com/macros/s/AKfycbytNfGIlXri-2W2Dy9owyKZFUeUAkWcjKqh29BUUjRuVX9gxJUy_58ga4kEMj0CajuR/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
 var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
 var TOOLS = ['Harki','Spade','Reka','Klippur','Belgur','Bætur','Handklippur','Skófla','Skúffa'];
@@ -268,7 +268,7 @@ var currentUser = null;
 var groups = [], tasks = [], diary = [], history = [], tools = [];
 
 function apiCall(action, params, callback) {
-  var cbName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 99999);
+  var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 99999);
   var url = API + '?callback=' + cbName + '&action=' + encodeURIComponent(action);
   for (var k in params) {
     var v = params[k];
@@ -277,25 +277,25 @@ function apiCall(action, params, callback) {
   }
   var timer = setTimeout(function() {
     delete window[cbName];
-    var s = document.getElementById('s_' + cbName);
+    var s = document.getElementById('s' + cbName);
     if (s) s.parentNode.removeChild(s);
     callback({error: 'Tímamörk - athugaðu netsamband'});
-  }, 15000);
+  }, 20000);
   window[cbName] = function(data) {
     clearTimeout(timer);
     delete window[cbName];
-    var s = document.getElementById('s_' + cbName);
+    var s = document.getElementById('s' + cbName);
     if (s) s.parentNode.removeChild(s);
     callback(data);
   };
   var s = document.createElement('script');
-  s.id = 's_' + cbName;
+  s.id = 's' + cbName;
   s.src = url;
   s.onerror = function() {
     clearTimeout(timer);
     delete window[cbName];
-    s.parentNode.removeChild(s);
-    callback({error: 'Gat ekki hlaðið scripts - athugaðu Apps Script URL'});
+    if (s.parentNode) s.parentNode.removeChild(s);
+    callback({error: 'Script villa - athugaðu Apps Script URL og deployment'});
   };
   document.head.appendChild(s);
 }
