@@ -255,17 +255,14 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 <div class="notif" id="notif"></div>
 
 <script>
-var API = 'https://script.google.com/macros/s/AKfycbytNfGIlXri-2W2Dy9owyKZFUeUAkWcjKqh29BUUjRuVX9gxJUy_58ga4kEMj0CajuR/exec';
+var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
 var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
 var TOOLS = ['Harki','Spade','Reka','Klippur','Belgur','Bætur','Handklippur','Skófla','Skúffa'];
-var USERS = {
-  'admin':       {pass:'admin123',role:'admin',displayName:'Stjórnandi'},
-  'flokkstjori1':{pass:'flokk123',role:'flokkstjori',gid:'g1',displayName:'Flokkstjóri 1'}
-};
+
 
 var currentUser = null;
-var groups = [], tasks = [], diary = [], history = [], tools = [];
+var groups = [], tasks = [], diary = [], appHistory = [], tools = [];
 
 function apiCall(action, params, callback) {
   var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 99999);
@@ -310,7 +307,7 @@ function loadAll() {
     groups  = (data.groups  || []).map(function(g) { g.exp = parseInt(g.exp) || 2; return g; });
     tasks   = (data.tasks   || []).map(function(t) { t.diff = parseInt(t.diff) || 1; return t; });
     diary   = data.diary   || [];
-    history = data.history || [];
+    appHistory = data.history || [];
     tools   = (data.tools && data.tools.length)
       ? data.tools.map(function(t) { t.taken = parseInt(t.taken)||0; t.returned = parseInt(t.returned)||0; return t; })
       : TOOLS.map(function(n) { return {name:n, taken:0, returned:0}; });
@@ -376,7 +373,7 @@ function logHistory(type, detail, taskId, taskName, gid, groupName) {
     taskName:    taskName || '',
     text:        detail || ''
   };
-  history.push(row);
+  appHistory.push(row);
   apiCall('addHistory', {row: row}, function() {});
 }
 
@@ -429,17 +426,55 @@ function doLogin() {
   var u = document.getElementById('loginUser').value.trim();
   var p = document.getElementById('loginPass').value.trim();
   var err = document.getElementById('loginErr');
-  err.textContent = '';
-  var hc = USERS[u];
-  if (hc && hc.pass === p) {
-    currentUser = {username: u, role: hc.role, gid: hc.gid || '', displayName: hc.displayName};
+  var btn = document.getElementById('loginBtn');
+  
+  err.textContent = ''; 
+
+  if (!u || !p) {
+    err.textContent = 'Vinsamlegast sláðu inn notandanafn og lykilorð';
+    return;
+  }
+
+  // Setjum hnappinn á "Loading" meðan beðið er eftir svari frá Google
+  btn.textContent = 'Skrái inn...';
+  btn.disabled = true;
+
+  // Sendum 'username' og 'password' sem passar við e.parameter í Code.gs
+  apiCall('login', { username: u, password: p }, function(response) {
+    
+    btn.textContent = 'Skrá inn';
+    btn.disabled = false;
+
+    // Code.gs skilar 'ok: true' ef þetta heppnast, eða error ef eitthvað er vitlaust
+    if (response.error || !response.ok) {
+      err.textContent = response.error || 'Tenging mistókst';
+      return;
+    }
+
+    // Ef innskráning tókst, þá er notandinn í 'response.user'
+    currentUser = {
+      username: response.user.username,
+      role: response.user.role,
+      gid: response.user.gid || '',
+      displayName: response.user.displayName || response.user.username
+    };
+    
+    // Uppfærum viðmótið uppi í horninu (nafn og útskrá takki)
     document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
     logHistory('login', currentUser.displayName + ' skráði sig inn', '', '', '', '');
-    if (currentUser.role === 'admin') { showSection('admin'); renderAdminGroups(); }
-    else { showSection('flokkstjori'); renderMyTask(); }
-  } else {
-    err.textContent = 'Rangt notandanafn eða lykilorð';
-  }
+    
+    // Hreinsum lykilorðsreitinn
+    document.getElementById('loginPass').value = '';
+
+    // Beinum notanda á réttan stað eftir því hvort hann er admin eða ekki
+    if (currentUser.role === 'admin') { 
+      showSection('admin'); 
+      renderAdminGroups(); 
+    } else { 
+      showSection('flokkstjori'); 
+      renderMyTask(); 
+    }
+  });
 }
 
 function doLogout() {
@@ -783,13 +818,13 @@ function renderAdminHistory() {
   var tSel = document.getElementById('histTypeFilter');
   if (uSel && uSel.options.length <= 1) {
     var seen = {};
-    for (var i = 0; i < history.length; i++) {
-      var u = history[i].user;
+    for (var i = 0; i < appHistory.length; i++) {
+      var u = appHistory[i].user;
       if (u && !seen[u]) {
         seen[u] = true;
         var o = document.createElement('option');
         o.value = u;
-        o.textContent = history[i].displayName || u;
+        o.textContent = appHistory[i].displayName || u;
         uSel.appendChild(o);
       }
     }
@@ -797,10 +832,10 @@ function renderAdminHistory() {
   var uf = uSel ? uSel.value : '';
   var tf = tSel ? tSel.value : '';
   var filtered = [];
-  for (var i = 0; i < history.length; i++) {
-    if (uf && history[i].user !== uf) continue;
-    if (tf && history[i].type !== tf) continue;
-    filtered.push(history[i]);
+  for (var i = 0; i < appHistory.length; i++) {
+    if (uf && appHistory[i].user !== uf) continue;
+    if (tf && appHistory[i].type !== tf) continue;
+    filtered.push(appHistory[i]);
   }
   filtered.sort(function(a,b) {
     var ta = a.timestamp || a.dateStr || a.date || '';
