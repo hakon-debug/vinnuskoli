@@ -145,8 +145,8 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <div class="login-card">
       <div class="login-logo">Vinnuskóli <span>Garðabæjar</span></div>
       <div class="login-sub">Skráðu þig inn til að halda áfram</div>
-      <div class="form-group"><label>Notandanafn</label><input type="text" id="loginUser" placeholder="notandanafn" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-      <div class="form-group"><label>Lykilorð</label><input type="password" id="loginPass" placeholder="lykilorð" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="form-group"><label>Notandanafn</label><input type="text" id="loginUser" placeholder="Notandanafn" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="form-group"><label>Lykilorð</label><input type="password" id="loginPass" placeholder="Lykilorð" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <button class="btn-full" id="loginBtn" onclick="doLogin()">Skrá inn</button>
       <div class="error-msg" id="loginErr"></div>
     </div>
@@ -161,12 +161,29 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   </div>
   <div class="page active" id="pg-dash"><div id="myTaskCard"></div></div>
   <div class="page" id="pg-dagbok">
-    <div id="myDiaryList" style="margin-bottom:1rem"></div>
-    <div class="card">
+    <div class="card" style="margin-bottom: 2rem;">
       <div class="card-title" style="margin-bottom:10px">Skrá dagbókarfærslu</div>
+      
+      <div class="form-row" style="margin-bottom:8px;">
+        <div class="form-group">
+          <label>Skráðir í hóp</label>
+          <input type="number" id="diaryRegistered" min="1" placeholder="Fjöldi skráðra" oninput="calcRatio()" />
+        </div>
+        <div class="form-group">
+          <label>Mættir í hóp</label>
+          <input type="number" id="diaryAttendance" min="0" placeholder="Fjöldi mættra" oninput="calcRatio()" />
+        </div>
+      </div>
+      
+      <div id="diaryRatioText" style="font-size:13px; font-weight:600; color:var(--green); margin-bottom:12px; height:18px;"></div>
+      
       <div class="form-group"><textarea id="diaryText" rows="4" placeholder="Hvað gerðist í dag?"></textarea></div>
       <button class="btn-primary" onclick="saveDiary()">Vista færslu</button>
     </div>
+
+    <h3 style="font-size:14px; font-weight:600; margin-bottom:12px;">Eldri færslur</h3>
+    <div id="myDiaryList" style="margin-bottom:1rem"></div>
+    
   </div>
   <div class="page" id="pg-taeki">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
@@ -193,7 +210,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <div class="card" id="groupFormCard">
       <div class="card-title" id="groupFormTitle" style="margin-bottom:1rem">Bæta við flokki</div>
       <div class="form-row">
-        <div class="form-group"><label>Nafn flokks</label><input type="text" id="groupName" placeholder="t.d. Alli, Balli og Jón"/></div>
+        <div class="form-group"><label>Nafn flokks</label><input type="text" id="groupName" placeholder="Nafn"/></div>
         <div class="form-group"><label>Reynslustig</label>
           <select id="groupExp"><option value="1">Byrjandi</option><option value="2" selected>Miðlungs</option><option value="3">Reyndur</option></select></div>
       </div>
@@ -258,11 +275,11 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
 var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
-var TOOLS = ['Harki','Spade','Reka','Klippur','Belgur','Bætur','Handklippur','Skófla','Skúffa'];
+var TOOLS = ['Arfasköfur','Hrífur','Fötur','Sópar','Stungugafflar'];
 
 
 var currentUser = null;
-var groups = [], tasks = [], diary = [], appHistory = [], tools = [];
+var groups = [], tasks = [], diary = [], appHistory = [], tools = [], leaders = [];
 
 function apiCall(action, params, callback) {
   var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 99999);
@@ -308,6 +325,7 @@ function loadAll() {
     tasks   = (data.tasks   || []).map(function(t) { t.diff = parseInt(t.diff) || 1; return t; });
     diary   = data.diary   || [];
     appHistory = data.history || [];
+    leaders = data.leaders || [];
     tools   = (data.tools && data.tools.length)
       ? data.tools.map(function(t) { t.taken = parseInt(t.taken)||0; t.returned = parseInt(t.returned)||0; return t; })
       : TOOLS.map(function(n) { return {name:n, taken:0, returned:0}; });
@@ -354,7 +372,11 @@ function getTask(id) {
   }
   return null;
 }
-
+function getIcelandicDate(d) {
+  var days = ['Sunnudagur', 'Mánudagur', 'Þriðjudagur', 'Miðvikudagur', 'Fimmtudagur', 'Föstudagur', 'Laugardagur'];
+  var months = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí', 'ágúst', 'september', 'október', 'nóvember', 'desember'];
+  return days[d.getDay()] + ', ' + d.getDate() + '. ' + months[d.getMonth()];
+}
 function todayStr() { return new Date().toLocaleDateString('is-IS'); }
 function todayISO() { return new Date().toISOString().slice(0,10); }
 function nowStr()   { var d = new Date(); return d.toLocaleDateString('is-IS') + ' ' + d.toLocaleTimeString('is-IS',{hour:'2-digit',minute:'2-digit'}); }
@@ -379,9 +401,10 @@ function logHistory(type, detail, taskId, taskName, gid, groupName) {
 
 function renderPublic() {
   var d = new Date();
-  document.getElementById('todayDate').textContent = d.toLocaleDateString('is-IS',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('todayDate').textContent = getIcelandicDate(d);
   var grid = document.getElementById('publicGrid');
   if (!groups.length) { grid.innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir flokkar skráðir.</p>'; return; }
+  
   var html = '';
   for (var i = 0; i < groups.length; i++) {
     var g = groups[i];
@@ -389,13 +412,32 @@ function renderPublic() {
     html += '<div class="group-card" onclick="openModal(\'' + g.id + '\')">';
     html += '<div class="group-name">' + g.name + '</div>';
     html += '<div class="group-task">' + (t ? t.name : 'Ekkert verkefni') + '</div>';
+    
     if (t) {
       html += '<div class="group-loc">&#128205; ' + (t.loc || '') + '</div>';
-      html += '<span class="diff-pill diff-' + t.diff + '">' + (DIFFS[t.diff] || '') + '</span>';
-      if (t.mapUrl) html += '<br><a class="map-pill" href="' + t.mapUrl + '" target="_blank" onclick="event.stopPropagation()">&#128506; Opna kort</a>';
     }
+
+    // NÝTT: Finnum flokkstjórana fyrir þennan hóp (byggt á gid)
+    var groupLeaders = [];
+    for (var j = 0; j < leaders.length; j++) {
+      if (String(leaders[j].gid) === String(g.id)) {
+        var pNum = leaders[j].phone ? ': ' + leaders[j].phone : '';
+        groupLeaders.push('📞 ' + leaders[j].name + pNum);
+      }
+    }
+    
+    // Birtum flokkstjórana (ef einhverjir eru) í staðinn fyrir erfiðleikastigið
+    if (groupLeaders.length > 0) {
+      html += '<div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:8px; line-height:1.6;">' + groupLeaders.join('<br>') + '</div>';
+    }
+
+    if (t && t.mapUrl) {
+       html += '<a class="map-pill" style="margin-top:8px;" href="' + t.mapUrl + '" target="_blank" onclick="event.stopPropagation()">&#128506; Opna kort</a>';
+    }
+    
     html += '</div>';
   }
+  
   var wrap = document.createElement('div');
   wrap.className = 'groups-grid';
   wrap.id = 'publicGrid';
@@ -409,9 +451,13 @@ function openModal(gid) {
   if (!g) return;
   t = getTask(g.taskId);
   if (!t) return;
+  
   var m = document.createElement('div');
   m.className = 'modal-overlay';
-  m.innerHTML = '<div class="modal"><div class="modal-hdr"><div><div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:4px">' + g.name + '</div><div class="modal-title">' + t.name + '</div></div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&#215;</button></div><p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">' + (t.desc || '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="diff-pill diff-' + t.diff + '">' + (DIFFS[t.diff]||'') + '</span><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>' + (t.mapUrl ? '<a href="' + t.mapUrl + '" target="_blank" class="map-pill" style="font-size:13px;padding:8px 14px">&#128506; Opna á Google Maps</a>' : '<p style="font-size:12px;color:var(--text-3)">Engin staðsetning skráð</p>') + '</div>';
+  
+  // Hér var 'diff-pill' tekin út, en staðsetningin og kortið eru ennþá á sínum stað!
+  m.innerHTML = '<div class="modal"><div class="modal-hdr"><div><div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:4px">' + g.name + '</div><div class="modal-title">' + t.name + '</div></div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&#215;</button></div><p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">' + (t.desc || '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>' + (t.mapUrl ? '<a href="' + t.mapUrl + '" target="_blank" class="map-pill" style="font-size:13px;padding:8px 14px">&#128506; Opna á Google Maps</a>' : '<p style="font-size:12px;color:var(--text-3)">Engin staðsetning skráð</p>') + '</div>';
+  
   document.body.appendChild(m);
   m.addEventListener('click', function(e) { if (e.target === m) m.parentNode.removeChild(m); });
 }
@@ -469,10 +515,12 @@ function doLogin() {
     // Beinum notanda á réttan stað eftir því hvort hann er admin eða ekki
     if (currentUser.role === 'admin') { 
       showSection('admin'); 
-      renderAdminGroups(); 
+      showAdmin('adm-groups'); // Pössum að admin lendi alltaf á Flokkar-flipanum
     } else { 
       showSection('flokkstjori'); 
+      showPage('pg-dash'); // Pössum að flokkstjóri lendi ALLTAF fyrst á Verkefni
       renderMyTask(); 
+      renderMyDiary(); // Teiknum dagbókina í bakgrunni fyrir nýja manninn
     }
   });
 }
@@ -481,6 +529,11 @@ function doLogout() {
   logHistory('login', (currentUser.displayName) + ' skráði sig út', '', '', '', '');
   currentUser = null;
   document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
+  
+  // NÝTT: Hreinsum skjáinn svo næsti maður sjái örugglega engin "draugagögn"
+  document.getElementById('myDiaryList').innerHTML = '';
+  document.getElementById('myTaskCard').innerHTML = '';
+  
   showSection('public');
   renderPublic();
 }
@@ -516,7 +569,7 @@ function renderMyTask() {
   var html = '<div class="card"><div class="card-title">' + (t ? t.name : 'Ekkert verkefni úthlutað') + '</div>';
   html += '<div class="card-sub">' + (t ? (t.desc || '') : '') + '</div>';
   if (t) {
-    html += '<div class="task-meta"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span><span class="diff-pill diff-' + t.diff + '">' + (DIFFS[t.diff]||'') + '</span></div>';
+    html += '<div class="task-meta"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>';
     if (t.mapUrl) html += '<a class="map-pill" href="' + t.mapUrl + '" target="_blank" style="display:inline-flex;margin-bottom:14px;font-size:12px">&#128506; Opna á Google Maps</a><br>';
   }
   html += '<button class="btn-ghost" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button></div>';
@@ -548,26 +601,84 @@ function renderMyDiary() {
   for (var i = 0; i < diary.length; i++) {
     if (String(diary[i].gid) === String(currentUser.gid)) entries.push(diary[i]);
   }
-  entries.sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
+  
+  // NÝTT: Gögnin koma í tímaröð úr Excel (elsta efst).
+  // Við snúum listanum einfaldlega við svo nýjasta færslan lendi alltaf efst!
+  entries.reverse(); 
+
   var html = '';
   if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Engar færslur enn.</p>';
   else for (var i = 0; i < entries.length; i++) {
-    html += '<div class="diary-entry"><div class="diary-date">' + (entries[i].dateStr||entries[i].date) + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
+
+    var attHtml = '';
+    if (entries[i].attendance && entries[i].registered) {
+      var pct = Math.round((entries[i].attendance / entries[i].registered) * 100);
+      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + ' / ' + entries[i].registered + ' (' + pct + '%)</span>';
+    } else if (entries[i].attendance) {
+      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
+    }
+    
+    // NÝTT: Betri skæri! Klippum í burtu ALLT sem er á eftir 'T' (T00:00:00...)
+    var rawDate = entries[i].dateStr || entries[i].date || '';
+    var cleanDate = String(rawDate).split('T')[0];
+    
+    html += '<div class="diary-entry"><div class="diary-date">' + cleanDate + attHtml + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
   }
   document.getElementById('myDiaryList').innerHTML = html;
 }
 
+function calcRatio() {
+  var reg = parseFloat(document.getElementById('diaryRegistered').value);
+  var att = parseFloat(document.getElementById('diaryAttendance').value);
+  var txtEl = document.getElementById('diaryRatioText');
+  
+  if (!isNaN(reg) && !isNaN(att) && reg > 0) {
+    var pct = Math.round((att / reg) * 100);
+    txtEl.textContent = 'Hlutfall mættra: ' + pct + '%';
+  } else {
+    txtEl.textContent = '';
+  }
+}
+
 function saveDiary() {
   var txt = document.getElementById('diaryText').value.trim();
+  var att = document.getElementById('diaryAttendance').value.trim();
+  var reg = document.getElementById('diaryRegistered').value.trim(); // Nýtt: grípum fjölda skráðra
+  
   if (!txt) return;
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
-  var row = {gid: currentUser.gid, group: g ? g.name : '', date: todayISO(), dateStr: todayStr(), text: txt};
+  
+  var row = {
+    gid: currentUser.gid, 
+    group: g ? g.name : '', 
+    date: todayISO(), 
+    dateStr: todayStr(), 
+    text: txt,
+    attendance: att,
+    registered: reg
+  };
+  
   diary.push(row);
   apiCall('addDiary', {row: row}, function() {});
-  logHistory('diary', txt, '', '', currentUser.gid, g ? g.name : '');
+
+  var histDetail = txt;
+  if (reg && att) {
+    var pct = Math.round((att / reg) * 100);
+    histDetail += ' (Mæting: ' + att + '/' + reg + ' - ' + pct + '%)';
+  } else if (att) {
+    histDetail += ' (Mæting: ' + att + ')';
+  }
+  
+  logHistory('diary', histDetail, '', '', currentUser.gid, g ? g.name : '');
+  
   document.getElementById('diaryText').value = '';
+  document.getElementById('diaryAttendance').value = '';
+  document.getElementById('diaryRegistered').value = '';
+  document.getElementById('diaryRatioText').textContent = '';
+  
   renderMyDiary();
+  if (currentUser.role === 'admin') renderAdminDiary();
   notify('Dagbókarfærsla vistuð');
 }
 
@@ -782,11 +893,27 @@ function renderAdminDiary() {
   for (var i = 0; i < diary.length; i++) {
     if (!f || String(diary[i].gid) === f) entries.push(diary[i]);
   }
-  entries.sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
+  
+  // NÝTT: Snúum við röðinni hér líka!
+  entries.reverse(); 
+  
   var html = '';
   if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2)">Engar færslur.</p>';
   else for (var i = 0; i < entries.length; i++) {
-    html += '<div class="diary-entry"><div class="diary-group">' + (entries[i].group||'') + '</div><div class="diary-date">' + (entries[i].dateStr||entries[i].date) + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
+    
+    var attHtml = '';
+    if (entries[i].attendance && entries[i].registered) {
+      var pct = Math.round((entries[i].attendance / entries[i].registered) * 100);
+      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + ' / ' + entries[i].registered + ' (' + pct + '%)</span>';
+    } else if (entries[i].attendance) {
+      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
+    }
+    
+    // Sama örugga klippingin á dagsetningunni
+    var rawDate = entries[i].dateStr || entries[i].date || '';
+    var cleanDate = String(rawDate).split('T')[0];
+    
+    html += '<div class="diary-entry"><div class="diary-group">' + (entries[i].group||'') + '</div><div class="diary-date">' + cleanDate + attHtml + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
   }
   document.getElementById('adminDiaryList').innerHTML = html;
 }
@@ -881,7 +1008,7 @@ function notify(msg) {
   setTimeout(function() { n.classList.remove('show'); }, 2500);
 }
 
-document.getElementById('todayDate').textContent = new Date().toLocaleDateString('is-IS',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('todayDate').textContent = getIcelandicDate(new Date());
 loadAll();
 </script>
 </body>
