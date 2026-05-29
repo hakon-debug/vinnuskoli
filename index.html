@@ -201,7 +201,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   <div class="inner-nav">
     <button class="active" onclick="showPage('pg-dash')">Verkefni</button>
     <button onclick="showPage('pg-dagbok')">Dagbók</button>
-    <button onclick="showPage('pg-taeki')">Tæki</button>
+    <button onclick="showPage('pg-taeki')">Verkfæri</button>
   </div>
   <div class="page active" id="pg-dash"><div id="myTaskCard"></div></div>
   <div class="page" id="pg-dagbok">
@@ -231,12 +231,12 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   </div>
   <div class="page" id="pg-taeki">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 style="font-size:16px;font-weight:600">Tækjaskrá</h3>
+      <h3 style="font-size:16px;font-weight:600">Verkfæraskrá</h3>
       <button class="btn-primary" onclick="saveTools()">Vista skrá</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tool-table">
-        <thead><tr><th>Tæki</th><th>Tekið</th><th>Skilað</th><th>Staða</th></tr></thead>
+        <thead><tr><th>Verkfæri</th><th>Tekið</th><th>Skilað</th><th>Staða</th></tr></thead>
         <tbody id="toolRows"></tbody>
       </table>
     </div>
@@ -250,7 +250,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <button class="admin-tab" onclick="showAdmin('adm-groups')">Flokkar</button>
     <button class="admin-tab" onclick="showAdmin('adm-tasks')">Verkefni</button>
     <button class="admin-tab" onclick="showAdmin('adm-dagbok')">Dagbók</button>
-    <button class="admin-tab" onclick="showAdmin('adm-taeki')">Tæki</button>
+    <button class="admin-tab" onclick="showAdmin('adm-taeki')">Verkfæri</button>
     <button class="admin-tab" onclick="showAdmin('adm-history')">Saga</button>
   </div>
 
@@ -319,7 +319,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   </div>
   <div class="admin-page" id="adm-taeki">
   <div class="filter-row">
-    <h3>Tækjasaga</h3>
+    <h3>Verkfærasaga</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <input type="date" id="toolsDateFilter" onchange="renderAdminTools()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;outline:none;" />
       <select id="toolsGroupFilter" class="sm" onchange="renderAdminTools()">
@@ -339,7 +339,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
           <option value="assigned">Verkefni úthlutað</option>
           <option value="completed">Verkefni lokið</option>
           <option value="diary">Dagbókarfærsla</option>
-          <option value="tools">Tækjaskrá</option>
+          <option value="tools">Verkfæraskrá</option>
           <option value="create_group">Flokkur búinn til</option>
           <option value="edit_group">Flokkur breytt</option>
           <option value="delete_group">Flokkur eytt</option>
@@ -870,7 +870,7 @@ function renderTools() {
   document.getElementById('pg-taeki').innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
       <div>
-        <h3 style="font-size:16px; font-weight:600">Tæki í dag</h3>
+        <h3 style="font-size:16px; font-weight:600">Verkfæri í dag</h3>
         <div style="font-size:12px; color:var(--text-2); margin-top:2px;">Skráðu hvað þið takið og skilið</div>
       </div>
       <div style="display:flex; gap:8px;">
@@ -992,10 +992,10 @@ function saveTools() {
   apiCall('saveTools', {data: tools}, function() {});
   
   // 4. Skráum í breytingasögu
-  var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum tækjum skilað!';
+  var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
   logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
   
-  notify('Tækjaskrá vistuð');
+  notify('Verkfæraskrá vistuð');
 }
 
 var editingGroupId = null;
@@ -1029,7 +1029,6 @@ function cancelTaskEdit() {
   document.getElementById('taskSaveBtn').textContent = 'Bæta við verkefni';
   document.getElementById('taskCancelBtn').style.display = 'none';
 }
-
 function renderAdminOverview() {
   var dateInput = document.getElementById('overviewDate');
   var selectedDate = dateInput.value;
@@ -1090,11 +1089,11 @@ function renderAdminOverview() {
     // Tækja staða
     var toolBadge = '';
     if (!toolsTaken) {
-      toolBadge = '<span style="color:var(--text-3); font-size:12px; font-weight:600;">Engin tæki tekin</span>';
+      toolBadge = '<span style="color:var(--text-3); font-size:12px; font-weight:600;">Engin verkfæri tekin</span>';
     } else if (missingToolsInGroup > 0) {
-      toolBadge = '<span style="color:var(--red); font-size:12px; font-weight:600;">⚠️ Vantar ' + missingToolsInGroup + ' tæki</span>';
+      toolBadge = '<span style="color:var(--red); font-size:12px; font-weight:600;">⚠️ Vantar ' + missingToolsInGroup + ' verkfæri</span>';
     } else {
-      toolBadge = '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Tækjum skilað</span>';
+      toolBadge = '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Verkfærum skilað</span>';
     }
 
     listHtml += '<div style="display:flex; flex-direction:column; gap:4px; text-align:right;">';
@@ -1117,7 +1116,7 @@ function renderAdminOverview() {
   // Kassi 2: Tæki (vantar)
   statsHtml += '<div class="stat-card">';
   statsHtml += '<div class="stat-num" style="' + (totalMissingTools > 0 ? 'color:var(--red);' : 'color:var(--green);') + '">' + totalMissingTools + '</div>';
-  statsHtml += '<div class="stat-lbl">Tæki óskilað</div>';
+  statsHtml += '<div class="stat-lbl">Verkfæri óskilað</div>';
   statsHtml += '</div>';
 
   // Setja inn á skjáinn
@@ -1366,7 +1365,7 @@ function renderAdminTools() {
   
   var html = '';
   if (!keys.length) {
-    html = '<p style="font-size:13px;color:var(--text-2)">Engin tækjaskráning fannst miðað við þessa síu.</p>';
+    html = '<p style="font-size:13px;color:var(--text-2)">Engin verkfæraskráning fannst miðað við þessa síu.</p>';
   } else {
     for (var k = 0; k < keys.length; k++) {
       var gData = grouped[keys[k]];
@@ -1462,7 +1461,7 @@ var TYPE_META = {
   'assigned':     {icon:'&#128295;',label:'Verkefni úthlutað',cls:'hist-assigned'},
   'completed':    {icon:'&#9989;',label:'Verkefni lokið',cls:'hist-completed'},
   'diary':        {icon:'&#128211;',label:'Dagbókarfærsla',cls:'hist-diary'},
-  'tools':        {icon:'&#128296;',label:'Tækjaskrá vistuð',cls:'hist-tools'},
+  'tools':        {icon:'&#128296;',label:'Verkfæraskrá vistuð',cls:'hist-tools'},
   'create_group': {icon:'&#10133;',label:'Flokkur búinn til',cls:'hist-create'},
   'edit_group':   {icon:'&#9999;',label:'Flokkur breytt',cls:'hist-edit'},
   'delete_group': {icon:'&#128465;',label:'Flokkur eytt',cls:'hist-delete'},
