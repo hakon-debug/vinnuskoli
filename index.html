@@ -245,7 +245,6 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 
 <div class="section" id="section-admin">
   <div class="admin-tabs">
-    <!-- NÝTT: Yfirlit dagsins er nú fremst og "active" -->
     <button class="admin-tab active" onclick="showAdmin('adm-overview')">Yfirlit</button>
     <button class="admin-tab" onclick="showAdmin('adm-groups')">Flokkar</button>
     <button class="admin-tab" onclick="showAdmin('adm-tasks')">Verkefni</button>
@@ -253,20 +252,13 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <button class="admin-tab" onclick="showAdmin('adm-taeki')">Verkfæri</button>
     <button class="admin-tab" onclick="showAdmin('adm-history')">Saga</button>
   </div>
-
-  <!-- NÝTT: Yfirlitssíðan (Overview) -->
   <div class="admin-page active" id="adm-overview">
     <div class="filter-row">
       <h3>Yfirlit dagsins</h3>
-      <!-- Leyfum admin að skoða líka eldri daga ef hann vill -->
       <input type="date" id="overviewDate" onchange="renderAdminOverview()" style="font-size:13px;padding:5px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);outline:none;" />
     </div>
-    
-    <!-- Tölfræði kassar efst -->
     <div class="stat-grid" id="overviewStats"></div>
-    
     <h3 style="font-size:14px; font-weight:600; margin:1rem 0 0.5rem 0;">Staða flokka</h3>
-    <!-- Listinn yfir alla flokka og stöðuna þeirra -->
     <div id="overviewGroups"></div>
   </div>
   <div class="admin-page active" id="adm-groups">
@@ -295,8 +287,6 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       </div>
       <div class="form-group"><label>Lýsing</label><input type="text" id="taskDesc" placeholder="Stutt lýsing..."/></div>
       <div class="form-group"><label>Google Maps hlekkur (valfrjálst)</label><input type="text" id="taskMap" placeholder="https://maps.app.goo.gl/..."/></div>
-      
-      <!-- ÞETTA ER NÝTT: "Vista breytingar" og "Hætta við" takkar -->
       <div style="display:flex;gap:8px">
         <button class="btn-primary" id="taskSaveBtn" onclick="addTask()">Bæta við verkefni</button>
         <button class="btn-outline" id="taskCancelBtn" onclick="cancelTaskEdit()" style="display:none">Hætta við</button>
@@ -500,7 +490,6 @@ function renderPublic() {
       html += '<div class="group-loc">&#128205; ' + (t.loc || '') + '</div>';
     }
 
-    // NÝTT: Finnum flokkstjórana fyrir þennan hóp (byggt á gid)
     var groupLeaders = [];
     for (var j = 0; j < leaders.length; j++) {
       if (String(leaders[j].gid) === String(g.id)) {
@@ -508,8 +497,7 @@ function renderPublic() {
         groupLeaders.push('📞 ' + leaders[j].name + pNum);
       }
     }
-    
-    // Birtum flokkstjórana (ef einhverjir eru) í staðinn fyrir erfiðleikastigið
+
     if (groupLeaders.length > 0) {
       html += '<div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:8px; line-height:1.6;">' + groupLeaders.join('<br>') + '</div>';
     }
@@ -537,8 +525,6 @@ function openModal(gid) {
   
   var m = document.createElement('div');
   m.className = 'modal-overlay';
-  
-  // Hér var 'diff-pill' tekin út, en staðsetningin og kortið eru ennþá á sínum stað!
   m.innerHTML = '<div class="modal"><div class="modal-hdr"><div><div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:4px">' + g.name + '</div><div class="modal-title">' + t.name + '</div></div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&#215;</button></div><p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">' + (t.desc || '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>' + (t.mapUrl ? '<a href="' + t.mapUrl + '" target="_blank" class="map-pill" style="font-size:13px;padding:8px 14px">&#128506; Opna á Google Maps</a>' : '<p style="font-size:12px;color:var(--text-3)">Engin staðsetning skráð</p>') + '</div>';
   
   document.body.appendChild(m);
@@ -564,23 +550,19 @@ function doLogin() {
     return;
   }
 
-  // Setjum hnappinn á "Loading" meðan beðið er eftir svari frá Google
   btn.textContent = 'Skrái inn...';
   btn.disabled = true;
 
-  // Sendum 'username' og 'password' sem passar við e.parameter í Code.gs
   apiCall('login', { username: u, password: p }, function(response) {
     
     btn.textContent = 'Skrá inn';
     btn.disabled = false;
 
-    // Code.gs skilar 'ok: true' ef þetta heppnast, eða error ef eitthvað er vitlaust
     if (response.error || !response.ok) {
       err.textContent = response.error || 'Tenging mistókst';
       return;
     }
 
-    // Ef innskráning tókst, þá er notandinn í 'response.user'
     currentUser = {
       username: response.user.username,
       role: response.user.role,
@@ -588,22 +570,19 @@ function doLogin() {
       displayName: response.user.displayName || response.user.username
     };
     
-    // Uppfærum viðmótið uppi í horninu (nafn og útskrá takki)
     document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
     logHistory('login', currentUser.displayName + ' skráði sig inn', '', '', '', '');
     
-    // Hreinsum lykilorðsreitinn
     document.getElementById('loginPass').value = '';
 
-    // Beinum notanda á réttan stað eftir því hvort hann er admin eða ekki
     if (currentUser.role === 'admin') { 
       showSection('admin'); 
-      showAdmin('adm-overview'); // Pössum að admin lendi alltaf á Flokkar-flipanum
+      showAdmin('adm-overview');
     } else { 
       showSection('flokkstjori'); 
-      showPage('pg-dash'); // Pössum að flokkstjóri lendi ALLTAF fyrst á Verkefni
+      showPage('pg-dash');
       renderMyTask(); 
-      renderMyDiary(); // Teiknum dagbókina í bakgrunni fyrir nýja manninn
+      renderMyDiary();
     }
   });
 }
@@ -613,7 +592,6 @@ function doLogout() {
   currentUser = null;
   document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
   
-  // NÝTT: Hreinsum skjáinn svo næsti maður sjái örugglega engin "draugagögn"
   document.getElementById('myDiaryList').innerHTML = '';
   document.getElementById('myTaskCard').innerHTML = '';
   
@@ -638,11 +616,10 @@ function showAdmin(p) {
   document.getElementById(p).classList.add('active');
   
   var btns = document.querySelectorAll('.admin-tab');
-  // LAGAÐ: Bætti adm-overview fremst í listann
   var ids = ['adm-overview', 'adm-groups','adm-tasks','adm-dagbok','adm-taeki','adm-history']; 
   for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', ids[i] === p);
   
-  if (p === 'adm-overview') renderAdminOverview(); // NÝTT
+  if (p === 'adm-overview') renderAdminOverview();
   if (p === 'adm-groups') renderAdminGroups();
   if (p === 'adm-tasks') renderTaskList();
   if (p === 'adm-dagbok') renderAdminDiary();
@@ -690,8 +667,6 @@ function renderMyDiary() {
     if (String(diary[i].gid) === String(currentUser.gid)) entries.push(diary[i]);
   }
   
-  // NÝTT: Gögnin koma í tímaröð úr Excel (elsta efst).
-  // Við snúum listanum einfaldlega við svo nýjasta færslan lendi alltaf efst!
   entries.reverse(); 
 
   var html = '';
@@ -705,8 +680,6 @@ function renderMyDiary() {
     } else if (entries[i].attendance) {
       attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
     }
-    
-    // NÝTT: Betri skæri! Klippum í burtu ALLT sem er á eftir 'T' (T00:00:00...)
     var rawDate = entries[i].dateStr || entries[i].date || '';
     var cleanDate = String(rawDate).split('T')[0];
     
@@ -733,9 +706,7 @@ function loadTodayDiary() {
   var today = todayISO();
   var found = null;
   
-  // Leitum að færslu frá þessum hóp fyrir daginn í dag
   for (var i = 0; i < diary.length; i++) {
-    // LAGAÐ: Notum .date fyrst, því það er nákvæmlega á YYYY-MM-DD formati!
     var rawDate = diary[i].date || diary[i].dateStr || '';
     var cleanDate = String(rawDate).split('T')[0];
     
@@ -747,15 +718,13 @@ function loadTodayDiary() {
 
   var btn = document.getElementById('diarySaveBtn');
   
-  // Ef hún fannst, fyllum við út formið
   if (found) {
     document.getElementById('diaryText').value = found.text || '';
     document.getElementById('diaryAttendance').value = found.attendance || '';
     document.getElementById('diaryRegistered').value = found.registered || '';
     if (btn) btn.textContent = 'Uppfæra færslu dagsins'; // Geri textann skýrari
     calcRatio();
-  } 
-  // Ef ekki, hreinsum við formið
+  }
   else {
     document.getElementById('diaryText').value = '';
     document.getElementById('diaryAttendance').value = '';
@@ -775,9 +744,7 @@ function saveDiary() {
   var today = todayISO();
   var existingIndex = -1;
   
-  // Kíkjum hvort við séum að uppfæra færslu fyrir daginn í dag
   for (var i = 0; i < diary.length; i++) {
-    // LAGAÐ: Sama hér, notum .date til að bera nákvæmlega saman við todayISO()
     var rawDate = diary[i].date || diary[i].dateStr || '';
     var cleanDate = String(rawDate).split('T')[0];
     
@@ -809,9 +776,7 @@ function saveDiary() {
     histDetail += ' (Mæting: ' + att + ')';
   }
   
-  // Ef færslan var til -> UPPFÆRUM hana
   if (existingIndex >= 0) {
-    // Höldum gömlu dagsetningunum svo formattið skemmist ekki
     row.date = diary[existingIndex].date;
     row.dateStr = diary[existingIndex].dateStr;
     
@@ -819,8 +784,7 @@ function saveDiary() {
     apiCall('saveAllDiary', {data: diary}, function() {});
     logHistory('diary', 'Uppfærði færslu dagsins: ' + histDetail, '', '', currentUser.gid, g ? g.name : '');
     notify('Dagbók uppfærð');
-  } 
-  // Ef hún var ekki til -> BÚUM TIL NÝJA
+  }
   else {
     diary.push(row);
     apiCall('addDiary', {row: row}, function() {});
@@ -836,20 +800,17 @@ var myCurrentTools = [];
 
 function loadTodayTools() {
   var today = todayISO();
-  myCurrentTools = []; // Hreinsum listann
+  myCurrentTools = [];
   
-  // Búum til grunnlista af tækjum
   for (var i = 0; i < TOOLS.length; i++) {
     myCurrentTools.push({ name: TOOLS[i], taken: 0, returned: 0 });
   }
 
-  // Látum kerfið fylla inn ef flokkurinn er búinn að vista eitthvað í dag
   for (var i = 0; i < tools.length; i++) {
     var rawDate = tools[i].date || tools[i].dateStr || '';
     var cleanDate = String(rawDate).split('T')[0];
     
     if (String(tools[i].gid).trim() === String(currentUser.gid).trim() && cleanDate === today) {
-      // Finnum tækið í myCurrentTools og uppfærum tölurnar
       for (var j = 0; j < myCurrentTools.length; j++) {
         if (myCurrentTools[j].name === tools[i].name) {
           myCurrentTools[j].taken = parseInt(tools[i].taken) || 0;
@@ -861,12 +822,7 @@ function loadTodayTools() {
   renderTools();
 }
 
-// Passum að hlaða tækjunum þegar flokkstjóri smellir á Tæki flipann
-// (Breyttu þessu inni í showPage(p) fallinu)
-// if (p === 'pg-taeki') loadTodayTools(); 
-
 function renderTools() {
-  // Bætum við "Skila öllu" takka og gerum þetta fallegt
   document.getElementById('pg-taeki').innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
       <div>
@@ -927,7 +883,6 @@ function renderTools() {
 
 function adjTool(i, field, delta) {
   myCurrentTools[i][field] = Math.max(0, myCurrentTools[i][field] + delta);
-  // Pössum að geta ekki skilað fleiru en var tekið
   if (field === 'returned' && myCurrentTools[i].returned > myCurrentTools[i].taken) {
     myCurrentTools[i].returned = myCurrentTools[i].taken;
   }
@@ -955,22 +910,20 @@ function saveTools() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
 
-  // 1. Fjarlægjum gamlar færslur þessa hóps fyrir DAGINN Í DAG úr stóra array-inu
   tools = tools.filter(function(t) {
     var rawDate = t.date || t.dateStr || '';
     var cleanDate = String(rawDate).split('T')[0];
     var isSameGroup = String(t.gid).trim() === String(currentUser.gid).trim();
     var isToday = cleanDate === today;
-    return !(isSameGroup && isToday); // Henda út ef það er þessi hópur í dag
+    return !(isSameGroup && isToday); 
   });
 
-  // 2. Bætum nýju færslunum við
   var summaryLog = [];
   var hasMissing = false;
 
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
-    if (t.taken > 0 || t.returned > 0) { // Vistum bara ef eitthvað var gert
+    if (t.taken > 0 || t.returned > 0) {
       tools.push({
         gid: currentUser.gid,
         group: g ? g.name : '',
@@ -988,10 +941,8 @@ function saveTools() {
     }
   }
 
-  // 3. Vistum í gagnagrunninn
   apiCall('saveTools', {data: tools}, function() {});
   
-  // 4. Skráum í breytingasögu
   var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
   logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
   
@@ -1033,7 +984,6 @@ function renderAdminOverview() {
   var dateInput = document.getElementById('overviewDate');
   var selectedDate = dateInput.value;
   
-  // Ef engin dagsetning er valin (t.d. þegar síðan opnast fyrst), notum við daginn í dag
   if (!selectedDate) {
     selectedDate = todayISO();
     dateInput.value = selectedDate;
@@ -1048,7 +998,6 @@ function renderAdminOverview() {
   for (var i = 0; i < groups.length; i++) {
     var g = groups[i];
     
-    // 1. Kanna hvort Dagbók sé til
     var hasDiary = false;
     for (var d = 0; d < diary.length; d++) {
       var dDate = (diary[d].date || diary[d].dateStr || '').split('T')[0];
@@ -1059,7 +1008,6 @@ function renderAdminOverview() {
     }
     if (hasDiary) diariesDone++;
 
-    // 2. Kanna stöðu tækja
     var toolsTaken = false;
     var missingToolsInGroup = 0;
     
@@ -1073,20 +1021,15 @@ function renderAdminOverview() {
     }
     totalMissingTools += missingToolsInGroup;
 
-    // --- Byggja upp HTML fyrir þennan flokk ---
     listHtml += '<div class="group-list-item" style="padding: 12px; align-items: flex-start;">';
-    
-    // Nafn flokks
     listHtml += '<div style="flex:1; min-width: 140px;">';
     listHtml += '<div style="font-size:14px; font-weight:700;">' + g.name + '</div>';
     listHtml += '</div>';
 
-    // Dagbókar staða
     var diaryBadge = hasDiary 
       ? '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Dagbók skráð</span>' 
       : '<span style="color:var(--red); font-size:12px; font-weight:600;">❌ Vantar dagbók</span>';
       
-    // Tækja staða
     var toolBadge = '';
     if (!toolsTaken) {
       toolBadge = '<span style="color:var(--text-3); font-size:12px; font-weight:600;">Engin verkfæri tekin</span>';
@@ -1100,26 +1043,21 @@ function renderAdminOverview() {
     listHtml += diaryBadge;
     listHtml += toolBadge;
     listHtml += '</div>';
-    
     listHtml += '</div>';
   }
 
-  // --- Byggja upp tölfræðikassana efst ---
   var statsHtml = '';
   
-  // Kassi 1: Dagbækur
   statsHtml += '<div class="stat-card">';
   statsHtml += '<div class="stat-num" style="' + (diariesDone === totalGroups ? 'color:var(--green);' : '') + '">' + diariesDone + ' / ' + totalGroups + '</div>';
   statsHtml += '<div class="stat-lbl">Dagbækur skráðar</div>';
   statsHtml += '</div>';
 
-  // Kassi 2: Tæki (vantar)
   statsHtml += '<div class="stat-card">';
   statsHtml += '<div class="stat-num" style="' + (totalMissingTools > 0 ? 'color:var(--red);' : 'color:var(--green);') + '">' + totalMissingTools + '</div>';
   statsHtml += '<div class="stat-lbl">Verkfæri óskilað</div>';
   statsHtml += '</div>';
 
-  // Setja inn á skjáinn
   document.getElementById('overviewStats').innerHTML = statsHtml;
   
   if (!groups.length) {
@@ -1250,8 +1188,6 @@ function renderTaskList() {
     var t = tasks[i];
     html += '<div class="task-list-item">';
     html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '</div></div>';
-    
-    // NÝTT: Hér kemur "Breyta" takkinn við hliðina á "Eyða" takkanum
     html += '<div style="display:flex;gap:6px;align-items:center;">';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditTask(\'' + t.id + '\')">&#x270E; Breyta</button>';
     html += '<button class="del-btn" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
@@ -1269,7 +1205,6 @@ function addTask() {
   var desc = document.getElementById('taskDesc').value.trim();
   var mapUrl = document.getElementById('taskMap').value.trim();
 
-  // Ef við erum að BREYTA verkefni
   if (editingTaskId) {
     for (var i = 0; i < tasks.length; i++) {
       if (tasks[i].id === editingTaskId) {
@@ -1285,7 +1220,6 @@ function addTask() {
     }
     notify('Verkefni uppfært');
   } 
-  // Ef við erum að BÚA TIL NÝTT verkefni
   else {
     var task = {
       id: 't' + Date.now(),
@@ -1301,7 +1235,7 @@ function addTask() {
   }
   
   apiCall('saveTasks', {data: tasks}, function() {});
-  cancelTaskEdit(); // Hreinsar formið og slekkur á Hætta við takkanum
+  cancelTaskEdit();
   renderTaskList();
   renderAdminGroups(); 
   renderPublic(); 
@@ -1324,7 +1258,6 @@ function renderAdminTools() {
   var sel = document.getElementById('toolsGroupFilter');
   var dateInput = document.getElementById('toolsDateFilter');
   
-  // Fyllum dropdown listann af flokkum (ef hann er tómur)
   if (sel && sel.options.length <= 1) {
     for (var i = 0; i < groups.length; i++) {
       var o = document.createElement('option');
@@ -1336,8 +1269,6 @@ function renderAdminTools() {
   
   var groupF = sel ? sel.value : '';
   var dateF = dateInput ? dateInput.value : ''; 
-
-  // Skref 1: Flokka tækin saman eftir "Dagsetning + Flokkur"
   var grouped = {};
   for (var i = 0; i < tools.length; i++) {
     var rawDate = tools[i].date || tools[i].dateStr || '';
@@ -1359,8 +1290,6 @@ function renderAdminTools() {
     }
   }
   
-  // Skref 2: Sækja lyklana, raða þeim og teikna HTML-ið
-  // Pössum að nýjasta dagsetningin komi alltaf efst
   var keys = Object.keys(grouped).sort().reverse(); 
   
   var html = '';
@@ -1369,8 +1298,6 @@ function renderAdminTools() {
   } else {
     for (var k = 0; k < keys.length; k++) {
       var gData = grouped[keys[k]];
-      
-      // Við endurnýtum bara útlitið af Dagbókinni, það er mjög snyrtilegt
       html += '<div class="diary-entry">';
       html += '<div class="diary-group">' + gData.groupName + '</div>';
       html += '<div class="diary-date" style="margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:6px;">' + gData.date + '</div>';
@@ -1419,16 +1346,11 @@ function renderAdminDiary() {
 
   var entries = [];
   for (var i = 0; i < diary.length; i++) {
-    // 1. Kíkjum hvort hópurinn passi
     var matchGroup = !f || String(diary[i].gid) === f;
-    
-    // 2. Kíkjum hvort dagsetningin passi
-    // LAGAÐ: Notum .date fyrst því admin input skilar YYYY-MM-DD
     var rawDate = diary[i].date || diary[i].dateStr || '';
     var cleanDate = String(rawDate).split('T')[0];
     var matchDate = !dateF || cleanDate === dateF;
     
-    // Ef BÆÐI passa, þá sýnum við færsluna
     if (matchGroup && matchDate) {
       entries.push(diary[i]);
     }
@@ -1447,8 +1369,6 @@ function renderAdminDiary() {
     } else if (entries[i].attendance) {
       attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
     }
-    
-    // Fyrir birtingu viljum við nota islenska dateStr módelið (t.d. 29.5.2026)
     var rawDate2 = entries[i].dateStr || entries[i].date || '';
     var cleanDate2 = String(rawDate2).split('T')[0];
     
