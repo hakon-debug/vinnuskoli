@@ -627,36 +627,84 @@ function showAdmin(p) {
   if (p === 'adm-history') renderAdminHistory();
 }
 
+function hasRequestedTaskToday(gid) {
+  var today = todayISO();
+  for (var i = 0; i < appHistory.length; i++) {
+    var h = appHistory[i];
+    var rawDate = h.date || h.dateStr || '';
+    var cleanDate = String(rawDate).split('T')[0];
+    
+    if (h.gid === gid && h.type === 'assigned' && cleanDate === today) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function renderMyTask() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
   var t = g ? getTask(g.taskId) : null;
+  
   var html = '<div class="card"><div class="card-title">' + (t ? t.name : 'Ekkert verkefni úthlutað') + '</div>';
   html += '<div class="card-sub">' + (t ? (t.desc || '') : '') + '</div>';
   if (t) {
     html += '<div class="task-meta"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>';
     if (t.mapUrl) html += '<a class="map-pill" href="' + t.mapUrl + '" target="_blank" style="display:inline-flex;margin-bottom:14px;font-size:12px">&#128506; Opna á Google Maps</a><br>';
   }
-  html += '<button class="btn-ghost" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button></div>';
+  
+  if (hasRequestedTaskToday(currentUser.gid)) {
+    html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Þið hafið þegar fengið úthlutað nýju verkefni í dag.</div>';
+  } else {
+    html += '<button class="btn-ghost" style="margin-top:10px;" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button>';
+  }
+  
+  html += '</div>';
   document.getElementById('myTaskCard').innerHTML = html;
 }
 
 function requestNewTask() {
+  if (hasRequestedTaskToday(currentUser.gid)) { 
+    notify('Þið hafið þegar fengið verkefni í dag'); 
+    return; 
+  }
+
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
+  
+  var assignedTaskIds = [];
+  for (var i = 0; i < groups.length; i++) {
+    if (groups[i].taskId) {
+      assignedTaskIds.push(String(groups[i].taskId));
+    }
+  }
+
   var ok = [];
   for (var i = 0; i < tasks.length; i++) {
-    if (tasks[i].diff <= g.exp && String(tasks[i].id) !== String(g.taskId)) ok.push(tasks[i]);
+    var isDiffOk = tasks[i].diff <= g.exp;
+    var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
+    var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
+    
+    if (isDiffOk && isNotCurrent && isNotAssignedToOthers) {
+      ok.push(tasks[i]);
+    }
   }
-  if (!ok.length) { notify('Engin hæfileg verkefni tiltæk'); return; }
+  
+  if (!ok.length) { 
+    notify('Engin laus verkefni tiltæk fyrir ykkar getustig'); 
+    return; 
+  }
+  
   var pick = ok[Math.floor(Math.random() * ok.length)];
   var old = getTask(g.taskId);
   if (old) logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
+  
   g.taskId = pick.id;
   logHistory('assigned', 'Nýtt verkefni úthlutað', pick.id, pick.name, g.id, g.name);
+  
   apiCall('saveGroups', {data: groups}, function() {
     renderPublic();
-    renderMyTask();
+    renderMyTask(); 
     notify('Nýtt verkefni: ' + pick.name);
   });
 }
