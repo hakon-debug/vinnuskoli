@@ -267,7 +267,15 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       <div class="form-row">
         <div class="form-group"><label>Nafn flokks</label><input type="text" id="groupName" placeholder="Nafn"/></div>
         <div class="form-group"><label>Reynslustig</label>
-          <select id="groupExp"><option value="1">Byrjandi</option><option value="2" selected>Miðlungs</option><option value="3">Reyndur</option></select></div>
+          <select id="groupExp"><option value="1">Byrjandi</option><option value="2" selected>Miðlungs</option><option value="3">Reyndur</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Svæði / Hverfi</label>
+        <select id="groupZone">
+          <option value="1" selected>Miðsvæðið</option>
+          <option value="2">Álftanes</option>
+          <option value="3">Urriðaholt</option>
+        </select>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-primary" id="groupSaveBtn" onclick="saveGroup()">Bæta við flokki</button>
@@ -281,8 +289,16 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       <div class="card-title" id="taskFormTitle" style="margin-bottom:1rem">Bæta við verkefni</div>
       <div class="form-group"><label>Heiti verkefnis</label><input type="text" id="taskName" placeholder="t.d. Snyrta beð"/></div>
       <div class="form-row">
+        <div class="form-group"><label>Svæði / Hverfi</label>
+          <select id="taskZone">
+            <option value="1" selected>Miðsvæðið</option>
+            <option value="2">Álftanes</option>
+            <option value="3">Urriðaholt</option>
+          </select>
+        </div>
         <div class="form-group"><label>Erfiðleikastig</label>
-          <select id="taskDiff"><option value="1">1 - Auðvelt</option><option value="2">2 - Miðlungs</option><option value="3">3 - Erfitt</option></select></div>
+          <select id="taskDiff"><option value="1">1 - Auðvelt</option><option value="2">2 - Miðlungs</option><option value="3">3 - Erfitt</option></select>
+        </div>
         <div class="form-group"><label>Staðsetning</label><input type="text" id="taskLoc" placeholder="t.d. Lundaból"/></div>
       </div>
       <div class="form-group"><label>Lýsing</label><input type="text" id="taskDesc" placeholder="Stutt lýsing..."/></div>
@@ -349,6 +365,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 <script>
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
+var ZONES = {'1':'Miðsvæðið', '2':'Álftanes', '3':'Urriðaholt'};
 var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
 var TOOLS = ['Arfasköfur','Hrífur','Fötur','Sópar','Stungugafflar'];
 
@@ -396,8 +413,8 @@ function loadAll() {
       document.getElementById('publicGrid').innerHTML = '<div class="err-banner"><strong>Tenging mistókst:</strong> ' + data.error + '<br><br><button class="btn-primary" onclick="loadAll()" style="margin-top:8px">Reyna aftur</button></div>';
       return;
     }
-    groups  = (data.groups  || []).map(function(g) { g.exp = parseInt(g.exp) || 2; return g; });
-    tasks   = (data.tasks   || []).map(function(t) { t.diff = parseInt(t.diff) || 1; return t; });
+    groups  = (data.groups  || []).map(function(g) { g.exp = parseInt(g.exp) || 2; g.zone = g.zone || '1'; return g; });
+    tasks   = (data.tasks   || []).map(function(t) { t.diff = parseInt(t.diff) || 1; t.zone = t.zone || '1'; return t; });
     diary   = data.diary   || [];
     appHistory = data.history || [];
     leaders = data.leaders || [];
@@ -684,14 +701,15 @@ function requestNewTask() {
     var isDiffOk = tasks[i].diff <= g.exp;
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
     var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
+    var isZoneOk = String(tasks[i].zone) === String(g.zone);
     
-    if (isDiffOk && isNotCurrent && isNotAssignedToOthers) {
+    if (isDiffOk && isNotCurrent && isNotAssignedToOthers && isZoneOk) {
       ok.push(tasks[i]);
     }
   }
   
   if (!ok.length) { 
-    notify('Engin laus verkefni, hafið samband við yfirflokkstjóra'); 
+    notify('Engin laus verkefni tiltæk, hafið samband við yfirflokkstjóra'); 
     return; 
   }
   
@@ -1009,6 +1027,7 @@ function startEditTask(tid) {
   document.getElementById('taskLoc').value = t.loc || '';
   document.getElementById('taskDesc').value = t.desc || '';
   document.getElementById('taskMap').value = t.mapUrl || '';
+  document.getElementById('taskZone').value = groups[i].zone || '1';
   
   document.getElementById('taskFormTitle').textContent = 'Breyta verkefni';
   document.getElementById('taskSaveBtn').textContent = 'Vista breytingar';
@@ -1023,7 +1042,8 @@ function cancelTaskEdit() {
   document.getElementById('taskLoc').value = '';
   document.getElementById('taskDesc').value = '';
   document.getElementById('taskMap').value = '';
-  
+  document.getElementById('taskZone').value = '1';
+
   document.getElementById('taskFormTitle').textContent = 'Bæta við verkefni';
   document.getElementById('taskSaveBtn').textContent = 'Bæta við verkefni';
   document.getElementById('taskCancelBtn').style.display = 'none';
@@ -1126,7 +1146,7 @@ function renderAdminGroups() {
       opts += '<option value="' + tasks[j].id + '" ' + (String(tasks[j].id) === String(g.taskId) ? 'selected' : '') + '>' + tasks[j].name + ' (' + tasks[j].diff + ')</option>';
     }
     html += '<div class="group-list-item">';
-    html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
+    html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
     html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
     html += '<select class="sm" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
@@ -1147,6 +1167,7 @@ function startEditGroup(gid) {
       document.getElementById('groupSaveBtn').textContent = 'Vista breytingar';
       document.getElementById('groupCancelBtn').style.display = '';
       document.getElementById('groupFormCard').scrollIntoView({behavior:'smooth'});
+      document.getElementById('groupZone').value = groups[i].zone || '1';
       break;
     }
   }
@@ -1160,9 +1181,12 @@ function cancelGroupEdit() {
   document.getElementById('groupFormTitle').textContent = 'Bæta við flokki';
   document.getElementById('groupSaveBtn').textContent = 'Bæta við flokki';
   document.getElementById('groupCancelBtn').style.display = 'none';
+  document.getElementById('groupZone').value = '1';
+  
 }
 
 function saveGroup() {
+  var zone = document.getElementById('groupZone').value;
   var name = document.getElementById('groupName').value.trim();
   if (!name) { notify('Vantar nafn flokks'); return; }
   var exp = parseInt(document.getElementById('groupExp').value);
@@ -1171,6 +1195,7 @@ function saveGroup() {
       if (groups[i].id === editingGroupId) {
         var oldName = groups[i].name;
         groups[i].name = name;
+        groups[i].zone = zone;
         groups[i].exp = exp;
         logHistory('edit_group', '"' + oldName + '" -> "' + name + '" (' + (EXP[exp]||'') + ')', '', '', groups[i].id, name);
         break;
@@ -1178,7 +1203,7 @@ function saveGroup() {
     }
     notify('Flokkur uppfærður');
   } else {
-    var newG = {id: 'g' + Date.now(), name: name, exp: exp, taskId: ''};
+    var newG = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
     groups.push(newG);
     logHistory('create_group', '"' + name + '" (' + (EXP[exp]||'') + ')', '', '', newG.id, name);
     notify('Flokkur bætt við');
@@ -1235,7 +1260,7 @@ function renderTaskList() {
   else for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
     html += '<div class="task-list-item">';
-    html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '</div></div>';
+    html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '</div></div>';
     html += '<div style="display:flex;gap:6px;align-items:center;">';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditTask(\'' + t.id + '\')">&#x270E; Breyta</button>';
     html += '<button class="del-btn" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
@@ -1245,6 +1270,7 @@ function renderTaskList() {
 }
 
 function addTask() {
+  var zone = document.getElementById('taskZone').value;
   var name = document.getElementById('taskName').value.trim();
   if (!name) { notify('Vantar heiti'); return; }
   
@@ -1262,6 +1288,7 @@ function addTask() {
         tasks[i].loc = loc;
         tasks[i].desc = desc;
         tasks[i].mapUrl = mapUrl;
+        tasks[i].zone = zone;
         logHistory('edit_task', '"' + oldName + '" -> "' + name + '"', editingTaskId, name, '', '');
         break;
       }
@@ -1269,14 +1296,7 @@ function addTask() {
     notify('Verkefni uppfært');
   } 
   else {
-    var task = {
-      id: 't' + Date.now(),
-      name: name,
-      diff: diff,
-      loc: loc,
-      desc: desc,
-      mapUrl: mapUrl
-    };
+    var task = {id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, desc: desc, mapUrl: mapUrl};
     tasks.push(task);
     logHistory('create_task', '"' + name + '" (' + (DIFFS[task.diff]||'') + ', ' + (task.loc||'') + ')', task.id, name, '', '');
     notify('Verkefni bætt við');
