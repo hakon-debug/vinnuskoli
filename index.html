@@ -390,7 +390,7 @@ function apiCall(action, params, callback) {
 }
 
 function loadAll() {
-  document.getElementById('publicGrid').innerHTML = '<div class="loading-bar"><div class="spinner"></div>Sæki gögn úr Google Sheets...</div>';
+  document.getElementById('publicGrid').innerHTML = '<div class="loading-bar"><div class="spinner"></div>Sæki gögn...</div>';
   apiCall('getAll', {}, function(data) {
     if (data.error) {
       document.getElementById('publicGrid').innerHTML = '<div class="err-banner"><strong>Tenging mistókst:</strong> ' + data.error + '<br><br><button class="btn-primary" onclick="loadAll()" style="margin-top:8px">Reyna aftur</button></div>';
