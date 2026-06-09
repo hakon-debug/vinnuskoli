@@ -831,19 +831,6 @@ function saveDiary() {
   
   if (!txt) return;
 
-  var today = todayISO();
-  var existingIndex = -1;
-  
-  for (var i = 0; i < diary.length; i++) {
-    var rawDate = diary[i].date || diary[i].dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
-    if (String(diary[i].gid).trim() === String(currentUser.gid).trim() && cleanDate === today) {
-      existingIndex = i;
-      break;
-    }
-  }
-
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
   
@@ -866,24 +853,15 @@ function saveDiary() {
     histDetail += ' (Mæting: ' + att + ')';
   }
   
-  if (existingIndex >= 0) {
-    row.date = diary[existingIndex].date;
-    row.dateStr = diary[existingIndex].dateStr;
-    
-    diary[existingIndex] = row;
-    apiCall('saveAllDiary', {data: diary}, function() {});
-    logHistory('diary', 'Uppfærði færslu dagsins: ' + histDetail, '', '', currentUser.gid, g ? g.name : '');
-    notify('Dagbók uppfærð');
-  }
-  else {
-    diary.push(row);
-    apiCall('addDiary', {row: row}, function() {});
+  // NÝTT: Köllum bara beint í upsertDiary á bakenda! Engin global array yfirskrift.
+  apiCall('upsertDiary', {row: row}, function(res) {
+    if(res.error) { notify('Gat ekki vistað: ' + res.error); return; }
+    notify('Dagbók vistuð');
     logHistory('diary', histDetail, '', '', currentUser.gid, g ? g.name : '');
-    notify('Dagbókarfærsla vistuð');
-  }
-  
-  renderMyDiary();
-  if (currentUser.role === 'admin') renderAdminDiary();
+    
+    // Til að sýna framendanum breytinguna strax sækjum við nýjustu gögnin (eða setjum bara inn lokalt)
+    loadAll(); 
+  });
 }
 
 var myCurrentTools = [];
@@ -1000,21 +978,14 @@ function saveTools() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
 
-  tools = tools.filter(function(t) {
-    var rawDate = t.date || t.dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    var isSameGroup = String(t.gid).trim() === String(currentUser.gid).trim();
-    var isToday = cleanDate === today;
-    return !(isSameGroup && isToday); 
-  });
-
+  var toolsToSave = [];
   var summaryLog = [];
   var hasMissing = false;
 
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
     if (t.taken > 0 || t.returned > 0) {
-      tools.push({
+      toolsToSave.push({
         gid: currentUser.gid,
         group: g ? g.name : '',
         date: today,
@@ -1031,12 +1002,21 @@ function saveTools() {
     }
   }
 
-  apiCall('saveTools', {data: tools}, function() {});
-  
-  var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
-  logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
-  
-  notify('Verkfæraskrá vistuð');
+  if (toolsToSave.length === 0) {
+    notify('Ekkert til að vista');
+    return;
+  }
+
+  // NÝTT: Sendum bara TÆKIN FYRIR ÞENNAN FLOKK Í DAG til að uppfæra
+  apiCall('upsertTools', {tools: toolsToSave}, function(res) {
+    if(res.error) { notify('Villa: ' + res.error); return; }
+    
+    var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
+    logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
+    notify('Verkfæraskrá vistuð');
+    
+    loadAll(); // Sækjum ferskustu stöðu eftir vistun
+  });
 }
 
 var editingGroupId = null;
