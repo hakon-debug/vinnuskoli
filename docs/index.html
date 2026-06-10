@@ -256,7 +256,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   <div class="page" id="pg-taeki">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <h3 style="font-size:16px;font-weight:600">Verkfæraskrá</h3>
-      <button class="btn-primary" onclick="saveTools()">Vista skrá</button>
+      <button id="toolsSaveBtn" class="btn-primary" onclick="saveTools()">Vista skrá</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tool-table">
@@ -398,36 +398,31 @@ var currentUser = null;
 var groups = [], tasks = [], diary = [], appHistory = [], tools = [], leaders = [];
 
 function apiCall(action, params, callback) {
-  var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 99999);
-  var url = API + '?callback=' + cbName + '&action=' + encodeURIComponent(action);
+  // Búum til Form gagna hlut til að senda
+  var formData = new URLSearchParams();
+  formData.append('action', action);
+  
   for (var k in params) {
     var v = params[k];
     if (typeof v === 'object') v = JSON.stringify(v);
-    url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
+    formData.append(k, v);
   }
-  var timer = setTimeout(function() {
-    delete window[cbName];
-    var s = document.getElementById('s' + cbName);
-    if (s) s.parentNode.removeChild(s);
-    callback({error: 'Tímamörk - athugaðu netsamband'});
-  }, 20000);
-  window[cbName] = function(data) {
-    clearTimeout(timer);
-    delete window[cbName];
-    var s = document.getElementById('s' + cbName);
-    if (s) s.parentNode.removeChild(s);
+
+  fetch(API, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
+  .then(function(response) { return response.json(); })
+  .then(function(data) {
     callback(data);
-  };
-  var s = document.createElement('script');
-  s.id = 's' + cbName;
-  s.src = url;
-  s.onerror = function() {
-    clearTimeout(timer);
-    delete window[cbName];
-    if (s.parentNode) s.parentNode.removeChild(s);
-    callback({error: 'Script villa - athugaðu Apps Script URL og deployment'});
-  };
-  document.head.appendChild(s);
+  })
+  .catch(function(error) {
+    console.error('Fetch villa:', error);
+    callback({error: 'Tenging mistókst - athugaðu netsamband'});
+  });
 }
 
 function loadAll() {
@@ -741,11 +736,17 @@ function requestNewTask() {
   var old = getTask(g.taskId);
   if (old) logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
   
+  // Uppfærum vinnsluminnið (local state)
   g.taskId = pick.id;
   logHistory('assigned', 'Nýtt verkefni úthlutað', pick.id, pick.name, g.id, g.name);
   
-  apiCall('saveGroups', {data: groups}, function() {
-    renderPublic();
+  // NÝTT: Við vistum BARA ÞENNAN EINA FLOKK (Ekki allt groups array-ið)
+  apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
+    if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
+    
+    // Við sækjum öll gögnin aftur bara til að vera 100% samstillt við aðra 
+    // en þar sem við notuðum Atomic aðgerð yfirskrifuðum við engan annan.
+    loadAll(); 
     renderMyTask(); 
     notify('Nýtt verkefni: ' + pick.name);
   });
@@ -831,6 +832,17 @@ function saveDiary() {
   
   if (!txt) return;
 
+  // --- 1. SLÖKKVUM Á TAKKANUM ---
+  var btn = document.getElementById('diarySaveBtn');
+  var originalText = 'Vista færslu';
+  if (btn) {
+    originalText = btn.textContent;
+    btn.textContent = 'Vistar... andartak';
+    btn.disabled = true;
+    btn.style.opacity = '0.7'; // Gerir takkann aðeins grárri
+  }
+  // ------------------------------
+
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
   
@@ -853,14 +865,30 @@ function saveDiary() {
     histDetail += ' (Mæting: ' + att + ')';
   }
   
-  // NÝTT: Köllum bara beint í upsertDiary á bakenda! Engin global array yfirskrift.
   apiCall('upsertDiary', {row: row}, function(res) {
+    
+    // --- 2. KVEIKJUM Á TAKKANUM AFTUR ---
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+    // ------------------------------------
+
     if(res.error) { notify('Gat ekki vistað: ' + res.error); return; }
     notify('Dagbók vistuð');
     logHistory('diary', histDetail, '', '', currentUser.gid, g ? g.name : '');
     
-    // Til að sýna framendanum breytinguna strax sækjum við nýjustu gögnin (eða setjum bara inn lokalt)
-    loadAll(); 
+    // 3. UPPFÆRUM MINNIÐ (Í staðinn fyrir loadAll)
+    var existing = false;
+    for (var j = 0; j < diary.length; j++) {
+      var dDate = (diary[j].date || diary[j].dateStr || '').split('T')[0];
+      if (String(diary[j].gid) === String(currentUser.gid) && dDate === todayISO()) {
+        diary[j] = row; existing = true; break;
+      }
+    }
+    if (!existing) diary.push(row);
+    renderMyDiary(); 
   });
 }
 
@@ -899,7 +927,7 @@ function renderTools() {
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn-outline" onclick="returnAllTools()">Skila öllu</button>
-        <button class="btn-primary" onclick="saveTools()">Vista skrá</button>
+        <button id="toolsSaveBtn" class="btn-primary" onclick="saveTools()">Vista skrá</button>
       </div>
     </div>
     <div id="toolCardsList"></div>
@@ -1007,15 +1035,46 @@ function saveTools() {
     return;
   }
 
-  // NÝTT: Sendum bara TÆKIN FYRIR ÞENNAN FLOKK Í DAG til að uppfæra
+  // --- 1. SLÖKKVUM Á TAKKANUM ---
+  var btn = document.getElementById('toolsSaveBtn');
+  var originalText = 'Vista skrá';
+  if (btn) {
+    originalText = btn.textContent;
+    btn.textContent = 'Vistar... andartak';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+  }
+  // ------------------------------
+
   apiCall('upsertTools', {tools: toolsToSave}, function(res) {
+    
+    // --- 2. KVEIKJUM Á TAKKANUM AFTUR ---
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+    // ------------------------------------
+
     if(res.error) { notify('Villa: ' + res.error); return; }
     
     var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
     logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
     notify('Verkfæraskrá vistuð');
     
-    loadAll(); // Sækjum ferskustu stöðu eftir vistun
+    // 3. UPPFÆRUM MINNIÐ (Í staðinn fyrir loadAll)
+    for (var j=0; j<toolsToSave.length; j++) {
+      var found = false;
+      for (var k=0; k<tools.length; k++) {
+        var tDate = (tools[k].date || tools[k].dateStr || '').split('T')[0];
+        if (tools[k].gid === toolsToSave[j].gid && tDate === toolsToSave[j].date && tools[k].name === toolsToSave[j].name) {
+          tools[k].taken = toolsToSave[j].taken;
+          tools[k].returned = toolsToSave[j].returned;
+          found = true; break;
+        }
+      }
+      if(!found) tools.push(toolsToSave[j]);
+    }
   });
 }
 
@@ -1031,7 +1090,7 @@ function startEditTask(tid) {
   document.getElementById('taskLoc').value = t.loc || '';
   document.getElementById('taskDesc').value = t.desc || '';
   document.getElementById('taskMap').value = t.mapUrl || '';
-  document.getElementById('taskZone').value = groups[i].zone || '1';
+  document.getElementById('taskZone').value = t.zone || '1';
   
   document.getElementById('taskFormTitle').textContent = 'Breyta verkefni';
   document.getElementById('taskSaveBtn').textContent = 'Vista breytingar';
@@ -1250,10 +1309,13 @@ function assignTask(gid, tid) {
   var t = getTask(tid);
   if (t) taskName = t.name;
   if (tid) logHistory('assigned', 'Stjórnandi úthlutaði verkefni', tid, taskName, gid, g.name);
+  
   g.taskId = tid || '';
-  apiCall('saveGroups', {data: groups}, function() {
-    renderPublic();
-    renderAdminGroups();
+  
+  // NÝTT: Við vistum BARA ÞENNAN EINA FLOKK
+  apiCall('assignTaskSingle', {gid: gid, tid: (tid || '')}, function(res) {
+    if(res.error) { notify('Villa: ' + res.error); return; }
+    loadAll();
     notify('Verkefni úthlutað');
   });
 }
