@@ -690,7 +690,7 @@ function renderMyTask() {
   }
   
   // NÝTT: Athugum hvort þetta sé hópur sem má EKKI biðja um verkefni
-  var isSpecialGroup = (g && (g.name === 'Jokers' || g.name === 'EGO'));
+  var isSpecialGroup = (g && (g.name === 'Jokers' || g.name === 'EGO' || 'Yfirflokkstjórar'));
   
   if (isSpecialGroup) {
     // Sýnum þennan texta í staðinn fyrir takkann
