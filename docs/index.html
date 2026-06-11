@@ -1015,33 +1015,34 @@ function saveTools() {
   var toolsToSave = [];
   var summaryLog = [];
   var hasMissing = false;
+  var hasAnyActivity = false; // Til að athuga hvort eitthvað yfir höfuð var skráð
 
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
+    
+    // NÝTT: Við pushum ÖLLUM verkfærum, meira að segja ef þau eru 0. 
+    // Þannig yfirskrifum við mistök ef fólk breytir til baka í 0.
+    toolsToSave.push({
+      gid: currentUser.gid,
+      group: g ? g.name : '',
+      date: today,
+      name: t.name,
+      taken: t.taken,
+      returned: t.returned
+    });
+    
     if (t.taken > 0 || t.returned > 0) {
-      toolsToSave.push({
-        gid: currentUser.gid,
-        group: g ? g.name : '',
-        date: today,
-        name: t.name,
-        taken: t.taken,
-        returned: t.returned
-      });
-      
-      var missing = t.taken - t.returned;
-      if (missing > 0) {
-        summaryLog.push(t.name + ' (Vantar ' + missing + ')');
-        hasMissing = true;
-      }
+      hasAnyActivity = true;
+    }
+    
+    var missing = t.taken - t.returned;
+    if (missing > 0) {
+      summaryLog.push(t.name + ' (Vantar ' + missing + ')');
+      hasMissing = true;
     }
   }
 
-  if (toolsToSave.length === 0) {
-    notify('Ekkert til að vista');
-    return;
-  }
-
-  // --- 1. SLÖKKVUM Á TAKKANUM ---
+  // --- SLÖKKVUM Á TAKKANUM ---
   var btn = document.getElementById('toolsSaveBtn');
   var originalText = 'Vista skrá';
   if (btn) {
@@ -1054,7 +1055,7 @@ function saveTools() {
 
   apiCall('upsertTools', {tools: toolsToSave}, function(res) {
     
-    // --- 2. KVEIKJUM Á TAKKANUM AFTUR ---
+    // --- KVEIKJUM Á TAKKANUM AFTUR ---
     if (btn) {
       btn.textContent = originalText;
       btn.disabled = false;
@@ -1064,11 +1065,12 @@ function saveTools() {
 
     if(res.error) { notify('Villa: ' + res.error); return; }
     
-    var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : 'Öllum verkfærum skilað!';
+    // Skráum í söguna - ef ekkert var skráð þá segjum við það bara
+    var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : (hasAnyActivity ? 'Öllum verkfærum skilað!' : 'Verkfæraskrá (Tóm)');
     logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
     notify('Verkfæraskrá vistuð');
     
-    // 3. UPPFÆRUM MINNIÐ (Í staðinn fyrir loadAll)
+    // UPPFÆRUM MINNIÐ BEINT
     for (var j=0; j<toolsToSave.length; j++) {
       var found = false;
       for (var k=0; k<tools.length; k++) {
