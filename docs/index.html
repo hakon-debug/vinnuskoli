@@ -689,7 +689,13 @@ function renderMyTask() {
     if (t.mapUrl) html += '<a class="map-pill" href="' + t.mapUrl + '" target="_blank" style="display:inline-flex;margin-bottom:14px;font-size:12px">&#128506; Opna á Google Maps</a><br>';
   }
   
-  if (hasRequestedTaskToday(currentUser.gid)) {
+  // NÝTT: Athugum hvort þetta sé hópur sem má EKKI biðja um verkefni
+  var isSpecialGroup = (g && (g.name === 'Jokers' || g.name === 'EGO'));
+  
+  if (isSpecialGroup) {
+    // Sýnum þennan texta í staðinn fyrir takkann
+    html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Ykkar verkefnum er stýrt beint af yfirflokkstjórum.</div>';
+  } else if (hasRequestedTaskToday(currentUser.gid)) {
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Þið hafið þegar fengið úthlutað nýju verkefni í dag.</div>';
   } else {
     html += '<button class="btn-ghost" style="margin-top:10px;" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button>';
