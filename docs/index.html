@@ -689,15 +689,18 @@ function renderMyTask() {
     if (t.mapUrl) html += '<a class="map-pill" href="' + t.mapUrl + '" target="_blank" style="display:inline-flex;margin-bottom:14px;font-size:12px">&#128506; Opna á Google Maps</a><br>';
   }
   
-  // NÝTT: Athugum hvort þetta sé hópur sem má EKKI biðja um verkefni
-  var isSpecialGroup = (g && (g.name === 'Jokers' || g.name === 'EGO' || 'Yfirflokkstjórar'));
+  // Tryggjum að nákvæmlega þessi tvö nöfn fái stjórnenda-textann (case sensitive)
+  var groupName = g ? (g.name || '') : '';
+  var isSpecialGroup = (groupName === 'Jokers' || groupName === 'EGO');
   
   if (isSpecialGroup) {
-    // Sýnum þennan texta í staðinn fyrir takkann
+    // 1. AÐEINS Jokers og EGO sjá þetta
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Ykkar verkefnum er stýrt beint af yfirflokkstjórum.</div>';
   } else if (hasRequestedTaskToday(currentUser.gid)) {
+    // 2. Ef hópur hefur þegar dregið verkefni í dag (daglega takmörkin virk aftur)
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Þið hafið þegar fengið úthlutað nýju verkefni í dag.</div>';
   } else {
+    // 3. Venjulegir hópar sem eiga eftir að draga verkefni sjá takkann!
     html += '<button class="btn-ghost" style="margin-top:10px;" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button>';
   }
   
@@ -727,8 +730,9 @@ function requestNewTask() {
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
     var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
     var isZoneOk = String(tasks[i].zone) === String(g.zone);
+    var isNotCompleted = (tasks[i].completed !== 'Já' && tasks[i].completed !== true);
     
-    if (isDiffOk && isNotCurrent && isNotAssignedToOthers && isZoneOk) {
+    if (isDiffOk && isNotCurrent && isNotAssignedToOthers && isZoneOk && isNotCompleted) {
       ok.push(tasks[i]);
     }
   }
@@ -1309,6 +1313,39 @@ function setExp(gid, exp) {
   }
 }
 
+function toggleTaskComplete(tid) {
+  for (var i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === tid) {
+      if (tasks[i].completed) {
+        // Taka af klárað status ef maður gerði mistök
+        tasks[i].completed = '';
+        tasks[i].completedDate = '';
+      } else {
+        // Merkja sem klárað og skrá dagsetningu
+        tasks[i].completed = 'Já';
+        tasks[i].completedDate = todayISO();
+        
+        // NÝTT OG MIKILVÆGT: Losa hópinn við verkefnið sjálfkrafa!
+        for (var j = 0; j < groups.length; j++) {
+          if (String(groups[j].taskId) === String(tid)) {
+            groups[j].taskId = '';
+            // Segjum bakendanum strax að taka verkefnið af þessum hópi
+            apiCall('assignTaskSingle', {gid: groups[j].id, tid: ''}, function(){});
+          }
+        }
+      }
+      break;
+    }
+  }
+  
+  // Vistum verkefnalistann 
+  apiCall('saveTasks', {data: tasks}, function() {
+    renderTaskList();
+    notify('Stöðu verkefnis breytt');
+    loadAll(); // Til að uppfæra allar tölur ef við losuðum hóp við verkefni
+  });
+}
+
 function assignTask(gid, tid) {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
@@ -1333,11 +1370,22 @@ function renderTaskList() {
   if (!tasks.length) html = '<p style="font-size:13px;color:var(--text-2)">Engin verkefni.</p>';
   else for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
+    
+    // NÝTT: Sýna hvort það sé klárað eða í vinnslu
+    var statusHtml = t.completed ? '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + (t.completedDate||'') + ')</span>' : '<span style="color:var(--text-3);font-weight:600;">Í vinnslu</span>';
+    
     html += '<div class="task-list-item">';
-    html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '</div></div>';
-    html += '<div style="display:flex;gap:6px;align-items:center;">';
+    html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
+    html += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;">';
+    html += '<div style="display:flex;gap:6px;">';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditTask(\'' + t.id + '\')">&#x270E; Breyta</button>';
     html += '<button class="del-btn" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
+    html += '</div>';
+    
+    // NÝTT: Takki til að klára eða opna aftur
+    var btnText = t.completed ? 'Opna aftur' : 'Merkja klárað';
+    html += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
+    
     html += '</div></div>';
   }
   document.getElementById('taskListAdmin').innerHTML = html;
