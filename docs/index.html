@@ -1372,7 +1372,8 @@ function renderTaskList() {
     var t = tasks[i];
     
     // NÝTT: Sýna hvort það sé klárað eða í vinnslu
-    var statusHtml = t.completed ? '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + (t.completedDate||'') + ')</span>' : '<span style="color:var(--text-3);font-weight:600;">Í vinnslu</span>';
+    var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
+    var statusHtml = t.completed ? '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>' : '<span style="color:var(--text-3);font-weight:600;">Í vinnslu</span>';
     
     html += '<div class="task-list-item">';
     html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
