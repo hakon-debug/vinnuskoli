@@ -1366,30 +1366,80 @@ function assignTask(gid, tid) {
 }
 
 function renderTaskList() {
-  var html = '';
-  if (!tasks.length) html = '<p style="font-size:13px;color:var(--text-2)">Engin verkefni.</p>';
-  else for (var i = 0; i < tasks.length; i++) {
+  var htmlActive = '';
+  var htmlCompleted = '';
+  var activeCount = 0;
+  var completedCount = 0;
+
+  for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
+    var isCompleted = (t.completed === 'Já' || t.completed === true);
     
-    // NÝTT: Sýna hvort það sé klárað eða í vinnslu
+    // 1. Finnum hvort einhver flokkur sé skráður á þetta verkefni akkúrat núna
+    var assignedGroup = null;
+    for (var j = 0; j < groups.length; j++) {
+      if (String(groups[j].taskId) === String(t.id)) {
+        assignedGroup = groups[j];
+        break;
+      }
+    }
+
+    // 2. Græjum textann og dagsetninguna
     var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
-    var statusHtml = t.completed ? '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>' : '<span style="color:var(--text-3);font-weight:600;">Í vinnslu</span>';
+    var statusHtml = '';
     
-    html += '<div class="task-list-item">';
-    html += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
-    html += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;">';
-    html += '<div style="display:flex;gap:6px;">';
-    html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditTask(\'' + t.id + '\')">&#x270E; Breyta</button>';
-    html += '<button class="del-btn" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
-    html += '</div>';
+    if (isCompleted) {
+      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>';
+    } else if (assignedGroup) {
+      statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
+    } else {
+      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>';
+    }
     
-    // NÝTT: Takki til að klára eða opna aftur
-    var btnText = t.completed ? 'Opna aftur' : 'Merkja klárað';
-    html += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
+    // 3. Byggjum spjaldið fyrir verkefnið
+    var cardHtml = '<div class="task-list-item">';
+    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
     
-    html += '</div></div>';
+    cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
+    cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
+    cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
+    cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
+    cardHtml += '</div>';
+    
+    var btnText = isCompleted ? 'Opna aftur' : 'Merkja klárað';
+    cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
+    
+    cardHtml += '</div></div>';
+
+    // 4. Setjum spjaldið í réttan bunka (Virk eða Kláruð)
+    if (isCompleted) {
+      htmlCompleted += cardHtml;
+      completedCount++;
+    } else {
+      htmlActive += cardHtml;
+      activeCount++;
+    }
   }
-  document.getElementById('taskListAdmin').innerHTML = html;
+
+  var finalHtml = '';
+  
+  // -- BIRTUM VIRKU VERKEFNIN --
+  if (activeCount === 0) {
+    finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni (Öll kláruð!).</p>';
+  } else {
+    finalHtml += htmlActive;
+  }
+  
+  // -- BIRTUM KLÁRUÐU VERKEFNIN MEÐ NÝJUM HAUS --
+  finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
+  
+  if (completedCount === 0) {
+    finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>';
+  } else {
+    finalHtml += htmlCompleted;
+  }
+
+  document.getElementById('taskListAdmin').innerHTML = finalHtml;
 }
 
 function addTask() {
