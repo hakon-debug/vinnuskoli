@@ -1285,9 +1285,13 @@ function saveGroup() {
     notify('Flokki bætt við');
   }
   
-  // ÖRUGG VISTUN - Vistar bara þennan eina flokk!
-  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() { loadAll(); });
+  // Sendum til baka í Sheets í bakgrunni
+  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
+  
+  // Uppfærum skjáinn strax
   cancelGroupEdit();
+  renderAdminGroups();
+  renderPublic();
 }
 
 function deleteGroup(gid) {
@@ -1297,8 +1301,16 @@ function deleteGroup(gid) {
   
   logHistory('delete_group', '"' + (g ? g.name : '') + '"', '', '', gid, g ? g.name : '');
   
-  // ÖRUGG EYÐING - Eyðir bara þessari línu!
-  apiCall('deleteRow', {sheet: 'groups', id: gid}, function() { loadAll(); notify('Flokki eytt'); });
+  // Henda út úr minninu (vantaði í síðasta kóða!)
+  groups = groups.filter(function(x) { return x.id !== gid; });
+  
+  // Eyða úr Sheets í bakgrunni
+  apiCall('deleteRow', {sheet: 'groups', id: gid}, function() {});
+  
+  // Uppfærum skjáinn strax
+  renderAdminGroups();
+  renderPublic();
+  notify('Flokki eytt');
 }
 
 function setExp(gid, exp) {
@@ -1311,8 +1323,8 @@ function setExp(gid, exp) {
       break;
     }
   }
-  // ÖRUGG VISTUN
-  if(theGroup) apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() { loadAll(); });
+  if(theGroup) apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
+  renderAdminGroups();
 }
 
 function toggleTaskComplete(tid) {
@@ -1334,12 +1346,14 @@ function toggleTaskComplete(tid) {
       break;
     }
   }
-  // ÖRUGG VISTUN
-  if(theTask) {
-    apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() { 
-      notify('Stöðu verkefnis breytt'); loadAll(); 
-    });
-  }
+  
+  if(theTask) apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
+  
+  // Uppfærum skjáinn strax
+  renderTaskList();
+  renderAdminGroups();
+  renderPublic();
+  notify('Stöðu verkefnis breytt');
 }
 
 function assignTask(gid, tid) {
@@ -1353,12 +1367,13 @@ function assignTask(gid, tid) {
   
   g.taskId = tid || '';
   
-  // NÝTT: Við vistum BARA ÞENNAN EINA FLOKK
-  apiCall('assignTaskSingle', {gid: gid, tid: (tid || '')}, function(res) {
-    if(res.error) { notify('Villa: ' + res.error); return; }
-    loadAll();
-    notify('Verkefni úthlutað');
-  });
+  apiCall('assignTaskSingle', {gid: gid, tid: (tid || '')}, function() {});
+  
+  // Uppfærum skjáinn strax
+  renderAdminGroups();
+  renderTaskList();
+  renderPublic();
+  notify('Verkefni úthlutað');
 }
 
 function renderTaskList() {
@@ -1466,9 +1481,13 @@ function addTask() {
     notify('Verkefni bætt við');
   }
   
-  // ÖRUGG VISTUN
-  apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() { loadAll(); });
+  apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
+  
+  // Uppfærum skjáinn strax
   cancelTaskEdit();
+  renderTaskList();
+  renderAdminGroups(); 
+  renderPublic(); 
 }
 
 function deleteTask(tid) {
@@ -1477,8 +1496,18 @@ function deleteTask(tid) {
   
   logHistory('delete_task', '"' + (t ? t.name : '') + '"', tid, t ? t.name : '', '', '');
   
-  // ÖRUGG EYÐING
-  apiCall('deleteRow', {sheet: 'tasks', id: tid}, function() { loadAll(); notify('Verkefni eytt'); });
+  // Henda út úr minninu
+  tasks = tasks.filter(function(x) { return String(x.id) !== String(tid); });
+  // Taka af flokkum ef einhver var með það
+  for (var i = 0; i < groups.length; i++) { if (String(groups[i].taskId) === String(tid)) groups[i].taskId = ''; }
+  
+  apiCall('deleteRow', {sheet: 'tasks', id: tid}, function() {});
+  
+  // Uppfærum skjáinn strax
+  renderTaskList();
+  renderAdminGroups();
+  renderPublic();
+  notify('Verkefni eytt');
 }
 
 function renderAdminTools() {
