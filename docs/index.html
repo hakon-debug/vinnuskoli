@@ -1265,85 +1265,81 @@ function saveGroup() {
   var name = document.getElementById('groupName').value.trim();
   if (!name) { notify('Vantar nafn flokks'); return; }
   var exp = parseInt(document.getElementById('groupExp').value);
+  var theGroup = null;
+
   if (editingGroupId) {
     for (var i = 0; i < groups.length; i++) {
       if (groups[i].id === editingGroupId) {
         var oldName = groups[i].name;
-        groups[i].name = name;
-        groups[i].zone = zone;
-        groups[i].exp = exp;
-        logHistory('edit_group', '"' + oldName + '" -> "' + name + '" (' + (EXP[exp]||'') + ')', '', '', groups[i].id, name);
+        groups[i].name = name; groups[i].zone = zone; groups[i].exp = exp;
+        theGroup = groups[i];
+        logHistory('edit_group', '"' + oldName + '" -> "' + name + '"', '', '', theGroup.id, name);
         break;
       }
     }
     notify('Flokkur uppfærður');
   } else {
-    var newG = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
-    groups.push(newG);
-    logHistory('create_group', '"' + name + '" (' + (EXP[exp]||'') + ')', '', '', newG.id, name);
-    notify('Flokkur bætt við');
+    theGroup = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
+    groups.push(theGroup);
+    logHistory('create_group', '"' + name + '"', '', '', theGroup.id, name);
+    notify('Flokki bætt við');
   }
-  apiCall('saveGroups', {data: groups}, function() {});
+  
+  // ÖRUGG VISTUN - Vistar bara þennan eina flokk!
+  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() { loadAll(); });
   cancelGroupEdit();
-  renderAdminGroups();
-  renderPublic();
 }
 
 function deleteGroup(gid) {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
   if (!confirm('Eyða flokki "' + (g ? g.name : '') + '"?')) return;
-  groups = groups.filter(function(x) { return x.id !== gid; });
+  
   logHistory('delete_group', '"' + (g ? g.name : '') + '"', '', '', gid, g ? g.name : '');
-  apiCall('saveGroups', {data: groups}, function() {});
-  renderAdminGroups();
-  renderPublic();
-  notify('Flokki eytt');
+  
+  // ÖRUGG EYÐING - Eyðir bara þessari línu!
+  apiCall('deleteRow', {sheet: 'groups', id: gid}, function() { loadAll(); notify('Flokki eytt'); });
 }
 
 function setExp(gid, exp) {
+  var theGroup = null;
   for (var i = 0; i < groups.length; i++) {
     if (groups[i].id === gid) {
-      var old = EXP[groups[i].exp] || '';
       groups[i].exp = exp;
-      logHistory('edit_group', groups[i].name + ': ' + old + ' -> ' + (EXP[exp]||''), '', '', gid, groups[i].name);
-      apiCall('saveGroups', {data: groups}, function() {});
+      theGroup = groups[i];
+      logHistory('edit_group', groups[i].name + ' uppfærði reynslu', '', '', gid, groups[i].name);
       break;
     }
   }
+  // ÖRUGG VISTUN
+  if(theGroup) apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() { loadAll(); });
 }
 
 function toggleTaskComplete(tid) {
+  var theTask = null;
   for (var i = 0; i < tasks.length; i++) {
     if (tasks[i].id === tid) {
       if (tasks[i].completed) {
-        // Taka af klárað status ef maður gerði mistök
-        tasks[i].completed = '';
-        tasks[i].completedDate = '';
+        tasks[i].completed = ''; tasks[i].completedDate = '';
       } else {
-        // Merkja sem klárað og skrá dagsetningu
-        tasks[i].completed = 'Já';
-        tasks[i].completedDate = todayISO();
-        
-        // NÝTT OG MIKILVÆGT: Losa hópinn við verkefnið sjálfkrafa!
+        tasks[i].completed = 'Já'; tasks[i].completedDate = todayISO();
         for (var j = 0; j < groups.length; j++) {
           if (String(groups[j].taskId) === String(tid)) {
             groups[j].taskId = '';
-            // Segjum bakendanum strax að taka verkefnið af þessum hópi
             apiCall('assignTaskSingle', {gid: groups[j].id, tid: ''}, function(){});
           }
         }
       }
+      theTask = tasks[i];
       break;
     }
   }
-  
-  // Vistum verkefnalistann 
-  apiCall('saveTasks', {data: tasks}, function() {
-    renderTaskList();
-    notify('Stöðu verkefnis breytt');
-    loadAll(); // Til að uppfæra allar tölur ef við losuðum hóp við verkefni
-  });
+  // ÖRUGG VISTUN
+  if(theTask) {
+    apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() { 
+      notify('Stöðu verkefnis breytt'); loadAll(); 
+    });
+  }
 }
 
 function assignTask(gid, tid) {
@@ -1446,53 +1442,43 @@ function addTask() {
   var zone = document.getElementById('taskZone').value;
   var name = document.getElementById('taskName').value.trim();
   if (!name) { notify('Vantar heiti'); return; }
-  
   var diff = parseInt(document.getElementById('taskDiff').value);
   var loc = document.getElementById('taskLoc').value.trim();
   var desc = document.getElementById('taskDesc').value.trim();
   var mapUrl = document.getElementById('taskMap').value.trim();
+  var theTask = null;
 
   if (editingTaskId) {
     for (var i = 0; i < tasks.length; i++) {
       if (tasks[i].id === editingTaskId) {
-        var oldName = tasks[i].name;
-        tasks[i].name = name;
-        tasks[i].diff = diff;
-        tasks[i].loc = loc;
-        tasks[i].desc = desc;
-        tasks[i].mapUrl = mapUrl;
-        tasks[i].zone = zone;
-        logHistory('edit_task', '"' + oldName + '" -> "' + name + '"', editingTaskId, name, '', '');
+        tasks[i].name = name; tasks[i].diff = diff; tasks[i].loc = loc;
+        tasks[i].desc = desc; tasks[i].mapUrl = mapUrl; tasks[i].zone = zone;
+        theTask = tasks[i];
+        logHistory('edit_task', 'Breytti verkefni', editingTaskId, name, '', '');
         break;
       }
     }
     notify('Verkefni uppfært');
-  } 
-  else {
-    var task = {id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, desc: desc, mapUrl: mapUrl};
-    tasks.push(task);
-    logHistory('create_task', '"' + name + '" (' + (DIFFS[task.diff]||'') + ', ' + (task.loc||'') + ')', task.id, name, '', '');
+  } else {
+    theTask = {id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, desc: desc, mapUrl: mapUrl, completed: '', completedDate: ''};
+    tasks.push(theTask);
+    logHistory('create_task', '"' + name + '"', theTask.id, name, '', '');
     notify('Verkefni bætt við');
   }
   
-  apiCall('saveTasks', {data: tasks}, function() {});
+  // ÖRUGG VISTUN
+  apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() { loadAll(); });
   cancelTaskEdit();
-  renderTaskList();
-  renderAdminGroups(); 
-  renderPublic(); 
 }
 
 function deleteTask(tid) {
   var t = getTask(tid);
   if (!confirm('Eyða verkefni "' + (t ? t.name : '') + '"?')) return;
-  tasks = tasks.filter(function(x) { return String(x.id) !== String(tid); });
-  for (var i = 0; i < groups.length; i++) { if (String(groups[i].taskId) === String(tid)) groups[i].taskId = ''; }
+  
   logHistory('delete_task', '"' + (t ? t.name : '') + '"', tid, t ? t.name : '', '', '');
-  apiCall('saveTasks', {data: tasks}, function() {});
-  apiCall('saveGroups', {data: groups}, function() {});
-  renderTaskList();
-  renderPublic();
-  notify('Verkefni eytt');
+  
+  // ÖRUGG EYÐING
+  apiCall('deleteRow', {sheet: 'tasks', id: tid}, function() { loadAll(); notify('Verkefni eytt'); });
 }
 
 function renderAdminTools() {
