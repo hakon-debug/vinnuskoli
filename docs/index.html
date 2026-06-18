@@ -1421,8 +1421,19 @@ function renderTaskList() {
   var activeCount = 0;
   var completedCount = 0;
 
-  for (var i = 0; i < tasks.length; i++) {
-    var t = tasks[i];
+  // --- NÝTT: Búum til afrit af listanum og röðum honum ---
+  var sortedTasks = tasks.slice().sort(function(a, b) {
+    if (a.diff !== b.diff) {
+      return a.diff - b.diff; // Erfiðleikastig fyrst
+    }
+    var nameA = a.name ? a.name.toLowerCase() : '';
+    var nameB = b.name ? b.name.toLowerCase() : '';
+    return nameA.localeCompare(nameB, 'is'); // Íslensk stafrófsröð næst
+  });
+
+  // Notum 'sortedTasks' í staðinn fyrir 'tasks' í lúppunni
+  for (var i = 0; i < sortedTasks.length; i++) {
+    var t = sortedTasks[i];
     var isCompleted = (t.completed === 'Já' || t.completed === true);
     
     // 1. Finnum hvort einhver flokkur sé skráður á þetta verkefni akkúrat núna
@@ -1480,7 +1491,7 @@ function renderTaskList() {
     finalHtml += htmlActive;
   }
   
-  // -- BIRTUM KLÁRUÐU VERKEFNIN MEÐ NÝJUM HAUS --
+  // -- BIRTUM KLÁRUÐU VERKEFNIN --
   finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
   
   if (completedCount === 0) {
