@@ -709,11 +709,6 @@ function renderMyTask() {
 }
 
 function requestNewTask() {
-  if (hasRequestedTaskToday(currentUser.gid)) { 
-    notify('Þið hafið þegar fengið verkefni í dag'); 
-    return; 
-  }
-
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
   
@@ -726,7 +721,20 @@ function requestNewTask() {
 
   var ok = [];
   for (var i = 0; i < tasks.length; i++) {
-    var isDiffOk = tasks[i].diff <= g.exp;
+    
+    // NÝTT: Nákvæmari stýring á erfiðleikastigum!
+    var isDiffOk = false;
+    if (g.exp === 1) {
+      // Byrjendur fá bara 1
+      isDiffOk = (tasks[i].diff === 1);
+    } else if (g.exp === 2) {
+      // Miðlungs fá bara 2
+      isDiffOk = (tasks[i].diff === 2);
+    } else if (g.exp === 3) {
+      // Reyndir fá bæði 2 og 3
+      isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3);
+    }
+    
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
     var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
     var isZoneOk = String(tasks[i].zone) === String(g.zone);
@@ -738,27 +746,29 @@ function requestNewTask() {
   }
   
   if (!ok.length) { 
-    notify('Engin laus verkefni tiltæk, hafið samband við yfirflokkstjóra'); 
+    notify('Engin laus verkefni tiltæk fyrir ykkar svæði eða reynslustig.'); 
     return; 
   }
   
   var pick = ok[Math.floor(Math.random() * ok.length)];
   var old = getTask(g.taskId);
-  if (old) logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
   
-  // Uppfærum vinnsluminnið (local state)
+  // Sjálfvirk klárun á gamla verkefninu
+  if (old) {
+    logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
+    old.completed = 'Já';
+    old.completedDate = todayISO();
+    apiCall('upsertRow', {sheet: 'tasks', row: old}, function() {});
+  }
+  
   g.taskId = pick.id;
   logHistory('assigned', 'Nýtt verkefni úthlutað', pick.id, pick.name, g.id, g.name);
   
-  // NÝTT: Við vistum BARA ÞENNAN EINA FLOKK (Ekki allt groups array-ið)
   apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
     if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
-    
-    // Við sækjum öll gögnin aftur bara til að vera 100% samstillt við aðra 
-    // en þar sem við notuðum Atomic aðgerð yfirskrifuðum við engan annan.
     loadAll(); 
     renderMyTask(); 
-    notify('Nýtt verkefni: ' + pick.name);
+    notify('Nýtt verkefni dregið!');
   });
 }
 
