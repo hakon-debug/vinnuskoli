@@ -1226,15 +1226,44 @@ function renderAdminGroups() {
   else for (var i = 0; i < groups.length; i++) {
     var g = groups[i];
     var t = getTask(g.taskId);
-    var opts = '<option value="">-- velja verkefni --</option>';
+    
+    // --- 1. SÍUM OG RÖÐUM VERKEFNUM ---
+    var availableTasks = [];
     for (var j = 0; j < tasks.length; j++) {
-      opts += '<option value="' + tasks[j].id + '" ' + (String(tasks[j].id) === String(g.taskId) ? 'selected' : '') + '>' + tasks[j].name + ' (' + tasks[j].diff + ')</option>';
+      var isComp = (tasks[j].completed === 'Já' || tasks[j].completed === true);
+      var isCurrent = (String(tasks[j].id) === String(g.taskId));
+      
+      // Birtum bara verkefnið ef það er ekki klárað (EÐA ef hópurinn er skráður á það núna)
+      if (!isComp || isCurrent) {
+        availableTasks.push(tasks[j]);
+      }
     }
+    
+    // Röðum fyrst eftir erfiðleikastigi (1, 2, 3) og svo í stafrófsröð
+    availableTasks.sort(function(a, b) {
+      if (a.diff !== b.diff) {
+        return a.diff - b.diff; // Erfiðleikastig
+      }
+      var nameA = a.name ? a.name.toLowerCase() : '';
+      var nameB = b.name ? b.name.toLowerCase() : '';
+      return nameA.localeCompare(nameB, 'is'); // Íslensk stafrófsröð
+    });
+
+    // --- 2. BÚUM TIL FELLILISTANN ---
+    var opts = '<option value="">-- velja verkefni --</option>';
+    for (var k = 0; k < availableTasks.length; k++) {
+       var tk = availableTasks[k];
+       var selected = (String(tk.id) === String(g.taskId)) ? 'selected' : '';
+       // Bættum við "Stig X" svo það sé auðlesnara
+       opts += '<option value="' + tk.id + '" ' + selected + '>' + tk.name + ' (Stig ' + tk.diff + ')</option>';
+    }
+    
+    // --- 3. BIRTUM FLOKKINN ---
     html += '<div class="group-list-item">';
     html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
     html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
-    html += '<select class="sm" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
+    html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
     html += '<button class="del-btn" onclick="deleteGroup(\'' + g.id + '\')">&#215;</button>';
     html += '</div></div>';
