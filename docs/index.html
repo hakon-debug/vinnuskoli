@@ -438,9 +438,29 @@ function loadAll() {
     appHistory = data.history || [];
     leaders = data.leaders || [];
     tools = data.tools || [];
+    
     if (!groups.length) seedGroups();
     else if (!tasks.length) seedTasks();
-    else renderPublic();
+    else {
+      // Birtum alltaf forsíðugögnin til öryggis
+      renderPublic();
+      
+      // NÝTT: Ef notandi ER innskráður (úr localStorage), uppfærum við hans skjái
+      if (currentUser) {
+        if (currentUser.role === 'admin') {
+          // Finnur hvaða admin flipi er opinn og teiknar hann upp aftur
+          var activeAdminTab = document.querySelector('.admin-page.active');
+          if (activeAdminTab) showAdmin(activeAdminTab.id);
+        } else {
+          // Teiknar upplýsingar flokkstjórans um leið og gögnin koma inn
+          renderMyTask(); 
+          renderMyDiary();
+          if (document.getElementById('pg-taeki').classList.contains('active')) {
+            loadTodayTools();
+          }
+        }
+      }
+    }
   });
 }
 
@@ -590,7 +610,6 @@ function doLogin() {
   btn.disabled = true;
 
   apiCall('login', { username: u, password: p }, function(response) {
-    
     btn.textContent = 'Skrá inn';
     btn.disabled = false;
 
@@ -605,6 +624,9 @@ function doLogin() {
       gid: response.user.gid || '',
       displayName: response.user.displayName || response.user.username
     };
+    
+    // NÝTT: Vistum notandann í minni vafrans (localStorage)
+    localStorage.setItem('vg_user', JSON.stringify(currentUser));
     
     document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
     logHistory('login', currentUser.displayName + ' skráði sig inn', '', '', '', '');
@@ -623,11 +645,34 @@ function doLogin() {
   });
 }
 
+function restoreSession() {
+  var savedUser = localStorage.getItem('vg_user');
+  if (savedUser) {
+    try {
+      currentUser = JSON.parse(savedUser);
+      document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
+      
+      // Sýnum rétta valmynd (Admin eða Flokkstjóri)
+      if (currentUser.role === 'admin') { 
+        showSection('admin'); 
+      } else { 
+        showSection('flokkstjori'); 
+        showPage('pg-dash');
+      }
+    } catch(e) {
+      localStorage.removeItem('vg_user'); // Ef gögnin voru skemmd
+    }
+  }
+}
+
 function doLogout() {
   logHistory('login', (currentUser.displayName) + ' skráði sig út', '', '', '', '');
-  currentUser = null;
-  document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
   
+  // NÝTT: Henda notandanum úr minninu
+  localStorage.removeItem('vg_user');
+  currentUser = null;
+  
+  document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
   document.getElementById('myDiaryList').innerHTML = '';
   document.getElementById('myTaskCard').innerHTML = '';
   
@@ -1133,6 +1178,7 @@ function cancelTaskEdit() {
   document.getElementById('taskSaveBtn').textContent = 'Bæta við verkefni';
   document.getElementById('taskCancelBtn').style.display = 'none';
 }
+
 function renderAdminOverview() {
   var dateInput = document.getElementById('overviewDate');
   var selectedDate = dateInput.value;
@@ -1142,7 +1188,8 @@ function renderAdminOverview() {
     dateInput.value = selectedDate;
   }
 
-  var totalGroups = groups.length;
+  // Breyting: Byrjum á 0 í stað þess að taka groups.length
+  var totalGroups = 0; 
   var diariesDone = 0;
   var totalMissingTools = 0;
 
@@ -1150,7 +1197,16 @@ function renderAdminOverview() {
 
   for (var i = 0; i < groups.length; i++) {
     var g = groups[i];
+    var safeName = g.name.trim().toLowerCase();
     
+    // NÝTT: Sleppum Jokers, EGO og Yfirflokkstjórum úr Yfirlitinu!
+    if (safeName === 'jokers' || safeName === 'ego' || safeName.includes('yfirflokkstjór')) {
+      continue; // Hoppar yfir þennan hóp og fer í næsta
+    }
+    
+    // Teljum hópinn (því hann er venjulegur hópur)
+    totalGroups++;
+
     var hasDiary = false;
     for (var d = 0; d < diary.length; d++) {
       var dDate = (diary[d].date || diary[d].dateStr || '').split('T')[0];
@@ -1202,7 +1258,8 @@ function renderAdminOverview() {
   var statsHtml = '';
   
   statsHtml += '<div class="stat-card">';
-  statsHtml += '<div class="stat-num" style="' + (diariesDone === totalGroups ? 'color:var(--green);' : '') + '">' + diariesDone + ' / ' + totalGroups + '</div>';
+  // Grænt ef allir "venjulegu" hóparnir eru búnir að skila!
+  statsHtml += '<div class="stat-num" style="' + ((diariesDone === totalGroups && totalGroups > 0) ? 'color:var(--green);' : '') + '">' + diariesDone + ' / ' + totalGroups + '</div>';
   statsHtml += '<div class="stat-lbl">Dagbækur skráðar</div>';
   statsHtml += '</div>';
 
@@ -1213,8 +1270,8 @@ function renderAdminOverview() {
 
   document.getElementById('overviewStats').innerHTML = statsHtml;
   
-  if (!groups.length) {
-    document.getElementById('overviewGroups').innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir flokkar skráðir í kerfið.</p>';
+  if (totalGroups === 0) {
+    document.getElementById('overviewGroups').innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir vinnuhópar skráðir í kerfið (eða bara stjórnendahópar).</p>';
   } else {
     document.getElementById('overviewGroups').innerHTML = listHtml;
   }
@@ -1774,6 +1831,7 @@ function notify(msg) {
 }
 
 document.getElementById('todayDate').textContent = getIcelandicDate(new Date());
+restoreSession();
 loadAll();
 </script>
 </body>
