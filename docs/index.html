@@ -1187,38 +1187,26 @@ function openRouteMap() {
   var today = todayISO();
   var bagCoords = [];
   
+  // 1. Söfnum saman öllum pokum sem á eftir að sækja
   for (var i = 0; i < bags.length; i++) {
+    // Sýnum bara poka dagsins sem eru ekki merktir sóttir
     if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
       bagCoords.push(bags[i].lat + ',' + bags[i].lng);
     }
   }
   
   if (bagCoords.length === 0) { 
-    notify('Engir pokar bíða'); 
+    notify('Engir pokar bíða sóttar í dag'); 
     return; 
   }
 
-  notify('Sæki þína staðsetningu...');
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var myLat = position.coords.latitude;
-      var myLng = position.coords.longitude;
-      
-      var url = 'https://www.google.com/maps/dir/' + myLat + ',' + myLng + '/' + bagCoords.join('/');
-      window.open(url, '_blank');
-      
-    }, function(error) {
-      console.warn('GPS villa, nota Current+Location í staðinn:', error);
-      var url = 'https://www.google.com/maps/dir/Current+Location/' + bagCoords.join('/');
-      window.open(url, '_blank');
-    }, {
-      enableHighAccuracy: true 
-    });
-  } else {
-    var url = 'https://www.google.com/maps/dir/Current+Location/' + bagCoords.join('/');
-    window.open(url, '_blank');
-  }
+  // 2. Búum til slóðina. 
+  // Við notum "My+Location" sem byrjunarpunkt. 
+  // Google Maps appið í símanum mun sjálfkrafa nota GPS símans.
+  var url = 'https://www.google.com/maps/dir/My+Location/' + bagCoords.join('/');
+  
+  // 3. Opnum strax! (Þetta gerist samstundis svo síminn blokkar þetta ekki)
+  window.open(url, '_blank');
 }
 
 // --- ADMIN / STJÓRNENDUR ---
