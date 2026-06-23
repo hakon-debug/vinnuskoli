@@ -1189,7 +1189,6 @@ function openRouteMap() {
   window.open('https://www.google.com/maps/dir/' + coords.join('/'), '_blank');
 }
 
-// --- ADMIN / STJÓRNENDUR ---
 function renderAdminOverview() {
   var dateInput = document.getElementById('overviewDate');
   var selectedDate = dateInput.value || todayISO();
@@ -1674,7 +1673,6 @@ function renderAdminHistory() {
   document.getElementById('adminHistoryList').innerHTML = html;
 }
 
-// --- INITIALIZATION ---
 document.getElementById('todayDate').textContent = getIcelandicDate(new Date());
 restoreSession();
 loadAll();
