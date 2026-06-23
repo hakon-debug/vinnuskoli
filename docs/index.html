@@ -1922,31 +1922,6 @@ function showPublic(p) {
   }
 }
 
-// Laga showPage valmyndina hjá flokkstjórum til að sýna pokana líka
-function showPage(p) {
-  // Sleggjan: Felum ALLAR síður (.page), alveg sama hvar þær eru í HTML-inu
-  var pages = document.querySelectorAll('.page');
-  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  
-  // Opnum þá réttu
-  var targetPage = document.getElementById(p);
-  if (targetPage) targetPage.classList.add('active');
-  
-  var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
-  var ids = ['pg-dash','pg-dagbok','pg-taeki','pg-pokar'];
-  for (var i = 0; i < btns.length; i++) {
-    if (btns[i]) btns[i].classList.toggle('active', ids[i] === p);
-  }
-  
-  if (p === 'pg-dagbok') renderMyDiary();
-  if (p === 'pg-taeki') loadTodayTools();
-  if (p === 'pg-pokar') {
-    renderMyBags();
-    // Mjög mikilvægt delay hér svo kassinn verði "sýnilegur" áður en kortið reiknar stærðina
-    setTimeout(function() { initReportMap(); }, 50);
-  }
-}
-
 // --- KORT TIL AÐ TILKYNNA POKA (Flokkstjórar) ---
 var reportMap = null;
 var reportMarker = null;
