@@ -998,39 +998,80 @@ function saveTools() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
 
-  var toolsToSave = [], summaryLog = [], hasMissing = false, hasAnyActivity = false;
+  var toolsToSave = [];
+  var summaryLog = [];
+  var hasMissing = false;
+  var hasAnyActivity = false;
 
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
-    toolsToSave.push({ gid: currentUser.gid, group: g ? g.name : '', date: today, name: t.name, taken: t.taken, returned: t.returned });
-    if (t.taken > 0 || t.returned > 0) { hasAnyActivity = true; }
-    var missing = t.taken - t.returned;
-    if (missing > 0) { summaryLog.push(t.name + ' (Vantar ' + missing + ')'); hasMissing = true; }
+    
+    // ATHUGUN: Á að vista þetta verkfæri?
+    // Við vistum ef:
+    // 1. Það er búið að taka eitthvað eða skila einhverju (> 0)
+    // 2. EÐA ef það var þegar búið að vista þetta verkfæri í dag (svo hægt sé að núllstilla villu)
+    
+    var alreadyExists = tools.some(function(dbItem) {
+      var dbDate = (dbItem.date || "").split('T')[0];
+      return dbItem.gid === currentUser.gid && dbDate === today && dbItem.name === t.name;
+    });
+
+    if (t.taken > 0 || t.returned > 0 || alreadyExists) {
+      toolsToSave.push({
+        gid: currentUser.gid,
+        group: g ? g.name : '',
+        date: today,
+        name: t.name,
+        taken: t.taken,
+        returned: t.returned
+      });
+      
+      if (t.taken > 0 || t.returned > 0) hasAnyActivity = true;
+      
+      var missing = t.taken - t.returned;
+      if (missing > 0) {
+        summaryLog.push(t.name + ' (Vantar ' + missing + ')');
+        hasMissing = true;
+      }
+    }
+  }
+
+  if (toolsToSave.length === 0) {
+    notify('Ekkert til að vista');
+    return;
   }
 
   var btn = document.getElementById('toolsSaveBtn');
   var originalText = 'Vista skrá';
-  if (btn) { originalText = btn.textContent; btn.textContent = 'Vistar... andartak'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (btn) {
+    originalText = btn.textContent;
+    btn.textContent = 'Vistar...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+  }
 
   apiCall('upsertTools', {tools: toolsToSave}, function(res) {
     if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
-    if(res.error) { notify('Villa: ' + res.error); return; }
+    if (res.error) { notify('Villa: ' + res.error); return; }
     
-    var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : (hasAnyActivity ? 'Öllum verkfærum skilað!' : 'Verkfæraskrá (Tóm)');
+    var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : (hasAnyActivity ? 'Öllum verkfærum skilað!' : 'Verkfæraskrá hreinsuð');
     logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
     notify('Verkfæraskrá vistuð');
     
+    // Uppfæra staðbundna minnið (vinnsluminnið í símanum)
     for (var j=0; j<toolsToSave.length; j++) {
       var found = false;
       for (var k=0; k<tools.length; k++) {
-        var tDate = String(tools[k].date || tools[k].dateStr || '').split('T')[0];
-        if (tools[k].gid === toolsToSave[j].gid && tDate === toolsToSave[j].date && tools[k].name === toolsToSave[j].name) {
-          tools[k].taken = toolsToSave[j].taken; tools[k].returned = toolsToSave[j].returned;
+        var tDate = (tools[k].date || "").split('T')[0];
+        if (tools[k].gid === toolsToSave[j].gid && tDate === today && tools[k].name === toolsToSave[j].name) {
+          tools[k].taken = toolsToSave[j].taken;
+          tools[k].returned = toolsToSave[j].returned;
           found = true; break;
         }
       }
       if(!found) tools.push(toolsToSave[j]);
     }
+    renderTools();
   });
 }
 
