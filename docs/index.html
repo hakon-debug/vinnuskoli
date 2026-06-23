@@ -1153,19 +1153,40 @@ function renderMyBags() {
   var html = '';
   var today = todayISO();
   for (var i = 0; i < bags.length; i++) {
+    // Sýnum bara poka dagsins frá þessum flokki
     if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
       var isPicked = (bags[i].pickedUp === 'Já');
-      var pickerName = bags[i].pickedUpBy ? ' (Sótt af: ' + bags[i].pickedUpBy + ')' : '';
-      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja' + pickerName + '</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Bíður</span>';
       
       html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
-      html += '<div>' + statusTag + '</div>';
+      html += '<div style="flex:1;"><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + (bags[i].loc || 'Engin lýsing') + '</span></div>';
+      
+      if (isPicked) {
+        html += '<span class="status-ok">✔️ Sótt</span>';
+      } else {
+        // Takki til að eyða ef það er ekki búið að sækja pokann
+        html += '<button class="del-btn" onclick="deleteMyBag(\'' + bags[i].id + '\')" style="margin-left:10px;">&#215;</button>';
+      }
       html += '</div>';
     }
   }
   if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar skráðir í dag.</p>';
   document.getElementById('myBagsList').innerHTML = html;
+}
+
+function deleteMyBag(id) {
+  if (!confirm('Viltu eyða þessari tilkynningu?')) return;
+
+  // 1. Eyða úr Sheets í bakgrunni
+  apiCall('deleteRow', {sheet: 'bags', id: id}, function(res) {
+    if(res.error) notify('Villa: ' + res.error);
+  });
+
+  // 2. Eyða úr staðbundnu minni (local array)
+  bags = bags.filter(function(b) { return b.id !== id; });
+
+  // 3. Uppfæra skjáinn strax
+  renderMyBags();
+  notify('Tilkynning eytt');
 }
 
 // Sækjanda-kortið
