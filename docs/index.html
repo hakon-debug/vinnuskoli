@@ -1344,16 +1344,19 @@ function saveGroup() {
         break;
       }
     }
-    notify('Flokkur uppfærður');
   } else {
     theGroup = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
     groups.push(theGroup);
     logHistory('create_group', '"' + name + '"', '', '', theGroup.id, name);
-    notify('Flokki bætt við');
   }
   
-  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
-  cancelGroupEdit(); renderAdminGroups(); renderPublic();
+  if (theGroup) {
+    apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
+    notify(editingGroupId ? 'Flokkur uppfærður' : 'Flokki bætt við');
+    cancelGroupEdit();
+    renderAdminGroups();
+    renderPublic();
+  }
 }
 
 function deleteGroup(gid) {
@@ -1429,7 +1432,8 @@ function cancelTaskEdit() {
 function addTask() {
   var zone = document.getElementById('taskZone').value;
   var name = document.getElementById('taskName').value.trim();
-  if (!name) { notify('Vantar heiti'); return; }
+  if (!name) { notify('Vantar heiti á verkefni'); return; }
+  
   var diff = parseInt(document.getElementById('taskDiff').value);
   var loc = document.getElementById('taskLoc').value.trim();
   var desc = document.getElementById('taskDesc').value.trim();
@@ -1442,20 +1446,24 @@ function addTask() {
         tasks[i].name = name; tasks[i].diff = diff; tasks[i].loc = loc;
         tasks[i].desc = desc; tasks[i].mapUrl = mapUrl; tasks[i].zone = zone;
         theTask = tasks[i];
-        logHistory('edit_task', 'Breytti verkefni', editingTaskId, name, '', '');
+        logHistory('edit_task', 'Breytti verkefni: ' + name, editingTaskId, name, '', '');
         break;
       }
     }
-    notify('Verkefni uppfært');
   } else {
     theTask = {id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, desc: desc, mapUrl: mapUrl, completed: '', completedDate: ''};
     tasks.push(theTask);
-    logHistory('create_task', '"' + name + '"', theTask.id, name, '', '');
-    notify('Verkefni bætt við');
+    logHistory('create_task', 'Nýtt verkefni: ' + name, theTask.id, name, '', '');
   }
   
-  apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
-  cancelTaskEdit(); renderTaskList(); renderAdminGroups(); renderPublic(); 
+  if (theTask) {
+    apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
+    notify(editingTaskId ? 'Verkefni uppfært' : 'Verkefni bætt við');
+    cancelTaskEdit();
+    renderTaskList();
+    renderAdminGroups(); 
+    renderPublic(); 
+  }
 }
 
 function deleteTask(tid) {
