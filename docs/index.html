@@ -194,6 +194,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 .notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;opacity:0;transition:opacity 0.25s;pointer-events:none;z-index:999;box-shadow:var(--shadow-md)}
 .notif.show{opacity:1}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}.groups-grid{grid-template-columns:1fr 1fr}.main{padding:1rem}}
+.page:not(.active) #reportMap, .page:not(.active) #bagsMap { display: none !important; }
 </style>
 </head>
 <body>
@@ -725,14 +726,22 @@ function restoreSession() {
 function doLogout() {
   logHistory('login', (currentUser.displayName) + ' skráði sig út', '', '', '', '');
   
-  // NÝTT: Henda notandanum úr minninu
   localStorage.removeItem('vg_user');
   currentUser = null;
   
   document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
+  
+  // Hreinsa og fela allt hjá flokkstjóra/admin
   document.getElementById('myDiaryList').innerHTML = '';
   document.getElementById('myTaskCard').innerHTML = '';
+  document.getElementById('myBagsList').innerHTML = '';
   
+  // Pössum að allar síður séu örugglega faldar nema forsíðan!
+  var flokkstjoriPages = document.querySelectorAll('#section-flokkstjori .page');
+  for (var i = 0; i < flokkstjoriPages.length; i++) {
+    flokkstjoriPages[i].classList.remove('active');
+  }
+
   showSection('public');
   renderPublic();
 }
@@ -741,6 +750,7 @@ function showPage(p) {
   var pages = document.querySelectorAll('#section-flokkstjori .page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
   document.getElementById(p).classList.add('active');
+  
   var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
   var ids = ['pg-dash','pg-dagbok','pg-taeki','pg-pokar'];
   for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', ids[i] === p);
@@ -749,7 +759,8 @@ function showPage(p) {
   if (p === 'pg-taeki') loadTodayTools();
   if (p === 'pg-pokar') {
     renderMyBags();
-    initReportMap(); // NÝTT: Kveikja á litla kortinu
+    // Mjög mikilvægt delay hér svo kassinn verði "sýnilegur" áður en kortið reiknar stærðina
+    setTimeout(function() { initReportMap(); }, 50);
   }
 }
 
@@ -1903,6 +1914,8 @@ function showPublic(p) {
 
   if (p === 'pub-pokar') {
     renderBags();
+    // Reikna stærð kortsins aðeins eftir að flipinn opnast
+    if(map) { setTimeout(function() { map.invalidateSize(); }, 50); }
   }
 }
 
