@@ -288,9 +288,8 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       </table>
     </div>
   </div>
-</div>
 
-<div class="page" id="pg-pokar">
+  <div class="page" id="pg-pokar">
     <div class="card">
       <div class="card-title">Tilkynna fulla ruslapoka</div>
       <div class="card-sub">Ýttu á GPS, EÐA smelltu á kortið til að velja staðsetningu handvirkt.</div>
@@ -322,6 +321,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <h3 style="font-size:14px; margin-bottom:8px;">Ykkar tilkynningar í dag</h3>
     <div id="myBagsList"></div>
   </div>
+</div> <!-- ENDA SECTION-FLOKKSTJORI HÉR -->
 
 <div class="section" id="section-admin">
   <div class="admin-tabs">
@@ -736,8 +736,8 @@ function doLogout() {
   document.getElementById('myTaskCard').innerHTML = '';
   document.getElementById('myBagsList').innerHTML = '';
   
-  // Pössum að allar síður séu örugglega faldar nema forsíðan!
-  var flokkstjoriPages = document.querySelectorAll('#section-flokkstjori .page');
+  // NÝTT OG BÆTT: Fela allar .page síður, alveg sama hvar þær eru staddar
+  var flokkstjoriPages = document.querySelectorAll('.page');
   for (var i = 0; i < flokkstjoriPages.length; i++) {
     flokkstjoriPages[i].classList.remove('active');
   }
@@ -747,13 +747,19 @@ function doLogout() {
 }
 
 function showPage(p) {
-  var pages = document.querySelectorAll('#section-flokkstjori .page');
+  // Sleggjan: Felum ALLAR síður (.page), alveg sama hvar þær eru í HTML-inu
+  var pages = document.querySelectorAll('.page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  document.getElementById(p).classList.add('active');
+  
+  // Opnum þá réttu
+  var targetPage = document.getElementById(p);
+  if (targetPage) targetPage.classList.add('active');
   
   var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
   var ids = ['pg-dash','pg-dagbok','pg-taeki','pg-pokar'];
-  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', ids[i] === p);
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i]) btns[i].classList.toggle('active', ids[i] === p);
+  }
   
   if (p === 'pg-dagbok') renderMyDiary();
   if (p === 'pg-taeki') loadTodayTools();
@@ -814,9 +820,6 @@ function renderMyTask() {
   if (isSpecialGroup) {
     // 1. AÐEINS Jokers og EGO sjá þetta
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Ykkar verkefnum er stýrt beint af yfirflokkstjórum.</div>';
-  } else if (hasRequestedTaskToday(currentUser.gid)) {
-    // 2. Ef hópur hefur þegar dregið verkefni í dag (daglega takmörkin virk aftur)
-    html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Þið hafið þegar fengið úthlutað nýju verkefni í dag.</div>';
   } else {
     // 3. Venjulegir hópar sem eiga eftir að draga verkefni sjá takkann!
     html += '<button class="btn-ghost" style="margin-top:10px;" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button>';
@@ -899,7 +902,7 @@ function renderMyDiary() {
   entries.reverse(); 
 
   var html = '';
-  if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Engar færslur enn.</p>';
+  if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2)">Engar færslur enn.</p>';
   else for (var i = 0; i < entries.length; i++) {
 
     var attHtml = '';
@@ -1273,7 +1276,7 @@ function renderAdminOverview() {
     var safeName = g.name.trim().toLowerCase();
     
     // NÝTT: Sleppum Jokers, EGO og Yfirflokkstjórum úr Yfirlitinu!
-    if (safeName === 'Jokers' || safeName === 'EGO' || safeName.includes('Yfirflokkstjórar')) {
+    if (safeName === 'jokers' || safeName === 'ego' || safeName.includes('yfirflokkstjór')) {
       continue; // Hoppar yfir þennan hóp og fer í næsta
     }
     
@@ -1921,15 +1924,27 @@ function showPublic(p) {
 
 // Laga showPage valmyndina hjá flokkstjórum til að sýna pokana líka
 function showPage(p) {
-  var pages = document.querySelectorAll('#section-flokkstjori .page');
+  // Sleggjan: Felum ALLAR síður (.page), alveg sama hvar þær eru í HTML-inu
+  var pages = document.querySelectorAll('.page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  document.getElementById(p).classList.add('active');
+  
+  // Opnum þá réttu
+  var targetPage = document.getElementById(p);
+  if (targetPage) targetPage.classList.add('active');
+  
   var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
   var ids = ['pg-dash','pg-dagbok','pg-taeki','pg-pokar'];
-  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', ids[i] === p);
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i]) btns[i].classList.toggle('active', ids[i] === p);
+  }
+  
   if (p === 'pg-dagbok') renderMyDiary();
   if (p === 'pg-taeki') loadTodayTools();
-  if (p === 'pg-pokar') renderMyBags();
+  if (p === 'pg-pokar') {
+    renderMyBags();
+    // Mjög mikilvægt delay hér svo kassinn verði "sýnilegur" áður en kortið reiknar stærðina
+    setTimeout(function() { initReportMap(); }, 50);
+  }
 }
 
 // --- KORT TIL AÐ TILKYNNA POKA (Flokkstjórar) ---
@@ -2025,7 +2040,7 @@ function renderMyBags() {
   for (var i = 0; i < bags.length; i++) {
     if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
       var isPicked = (bags[i].pickedUp === 'Já');
-      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Bíður sóttar</span>';
+      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Poki bíður</span>';
       
       html += '<div class="group-list-item">';
       html += '<div><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
@@ -2112,190 +2127,7 @@ function openRouteMap() {
     }
   }
   
-  if (coords.length === 0) { notify('Engir pokar bíða sóttar'); return; }
-  var url = 'https://www.google.com/maps/dir/' + coords.join('/');
-  window.open(url, '_blank');
-}// --- KORT TIL AÐ TILKYNNA POKA (Flokkstjórar) ---
-var reportMap = null;
-var reportMarker = null;
-
-function initReportMap() {
-  if (!reportMap) {
-    reportMap = L.map('reportMap').setView([64.0886, -21.9066], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(reportMap);
-    
-    // Setjum pinna sem hægt er að færa til
-    reportMarker = L.marker([64.0886, -21.9066], {draggable: true}).addTo(reportMap);
-
-    // Uppfæra hnitin ef pinninn er dreginn
-    reportMarker.on('dragend', function(e) {
-      var pos = e.target.getLatLng();
-      document.getElementById('bagLat').value = pos.lat;
-      document.getElementById('bagLng').value = pos.lng;
-      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
-    });
-
-    // Uppfæra hnitin ef smellt er á kortið
-    reportMap.on('click', function(e) {
-      reportMarker.setLatLng(e.latlng);
-      document.getElementById('bagLat').value = e.latlng.lat;
-      document.getElementById('bagLng').value = e.latlng.lng;
-      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
-    });
-  }
-  setTimeout(function() { reportMap.invalidateSize(); }, 200);
-}
-
-function getGPS() {
-  var btn = document.getElementById('gpsStatus');
-  btn.textContent = 'Leita...';
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      document.getElementById('bagLat').value = pos.coords.latitude;
-      document.getElementById('bagLng').value = pos.coords.longitude;
-      btn.textContent = '✔️ GPS Hnit fundin';
-      
-      // Færum kortið og pinnann á réttan stað
-      if (reportMap && reportMarker) {
-        reportMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-        reportMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
-      }
-    }, function(err) {
-      btn.textContent = '❌ Tókst ekki';
-      notify('Gat ekki fundið staðsetningu. Er kveikt á GPS?');
-    });
-  } else { notify('Vafrinn styður ekki GPS'); }
-}
-
-function saveBags() {
-  var qty = document.getElementById('bagQty').value;
-  var loc = document.getElementById('bagLoc').value.trim();
-  
-  // Ef ekkert var valið, tökum við hnitin sem pinninn er á
-  var lat = document.getElementById('bagLat').value || (reportMarker ? reportMarker.getLatLng().lat : '');
-  var lng = document.getElementById('bagLng').value || (reportMarker ? reportMarker.getLatLng().lng : '');
-
-  if (!lat || !lng) { notify('Vinsamlegast veldu staðsetningu á kortinu'); return; }
-
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
-
-  var btn = document.getElementById('bagSaveBtn');
-  var origText = btn.textContent;
-  btn.textContent = 'Vistar...'; btn.disabled = true;
-
-  var theBag = {
-    id: 'b' + Date.now(), gid: currentUser.gid, groupName: g ? g.name : '',
-    date: todayISO(), qty: qty, loc: loc, lat: lat, lng: lng, pickedUp: '' // NÝTT: Sótt dálkurinn
-  };
-
-  apiCall('upsertRow', {sheet: 'bags', row: theBag}, function(res) {
-    btn.textContent = origText; btn.disabled = false;
-    if(res.error) { notify('Villa: ' + res.error); return; }
-    
-    notify('Pokar skráðir!');
-    bags.push(theBag);
-    
-    document.getElementById('bagLoc').value = '';
-    document.getElementById('gpsStatus').textContent = '📍 Sækja GPS hnit';
-    renderMyBags();
-  });
-}
-
-function renderMyBags() {
-  var html = '';
-  var today = todayISO();
-  for (var i = 0; i < bags.length; i++) {
-    if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
-      var isPicked = (bags[i].pickedUp === 'Já');
-      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Þarf að sækja</span>';
-      
-      html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
-      html += '<div>' + statusTag + '</div>';
-      html += '</div>';
-    }
-  }
-  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar skráðir í dag.</p>';
-  document.getElementById('myBagsList').innerHTML = html;
-}
-
-// --- TEIKNA KORTIÐ OG LISTANN FYRIR BÍLSTJÓRA (Forsíðan) ---
-var map = null;
-var markers = [];
-
-function renderBags() {
-  var html = '';
-  var activeBags = [];
-  var today = todayISO();
-  
-  for (var i = 0; i < bags.length; i++) {
-    // Sýnum bara poka sem EKKI er búið að sækja
-    if (String(bags[i].date).includes(today) && bags[i].pickedUp !== 'Já') {
-      activeBags.push(bags[i]);
-      html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].groupName + ' (' + bags[i].qty + ' pokar)</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
-      html += '<div style="display:flex;gap:6px;">';
-      html += '<a class="btn-outline" href="https://maps.google.com/?q=' + bags[i].lat + ',' + bags[i].lng + '" target="_blank" style="padding:4px 8px; font-size:11px;">Kort</a>';
-      html += '<button class="btn-outline" onclick="markBagPickedUp(\'' + bags[i].id + '\')" style="padding:4px 8px; font-size:11px; border-color:var(--green); color:var(--green)">✔️ Sótt</button>';
-      html += '</div></div>';
-    }
-  }
-  
-  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar bíða þess að vera sóttir.</p>';
-  document.getElementById('publicBagsList').innerHTML = html;
-
-  if (!map) {
-    map = L.map('bagsMap').setView([64.0886, -21.9066], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  }
-  
-  setTimeout(function() { map.invalidateSize(); }, 200);
-
-  for(var i=0; i<markers.length; i++) { map.removeLayer(markers[i]); }
-  markers = [];
-
-  for (var i = 0; i < activeBags.length; i++) {
-    var b = activeBags[i];
-    var marker = L.marker([b.lat, b.lng]).addTo(map)
-      .bindPopup("<b>" + b.groupName + "</b><br>" + b.qty + " pokar<br>" + b.loc);
-    markers.push(marker);
-  }
-}
-
-// NÝTT: Fall til að merkja poka sóttan!
-function markBagPickedUp(id) {
-  if (!confirm('Ertu viss um að búið sé að sækja þessa poka?')) return;
-  var theBag = null;
-  for (var i = 0; i < bags.length; i++) {
-    if (bags[i].id === id) {
-      bags[i].pickedUp = 'Já';
-      theBag = bags[i];
-      break;
-    }
-  }
-  
-  if (theBag) {
-    // Teikna listann um leið svo pokinn hverfi af skjánum strax
-    renderBags(); 
-    notify('Poki merktur sem sóttur!');
-    // Senda uppfærsluna til Sheets í bakgrunni
-    apiCall('upsertRow', {sheet: 'bags', row: theBag}, function() { loadAll(); });
-  }
-}
-
-function openRouteMap() {
-  var today = todayISO();
-  var coords = [];
-  
-  for (var i = 0; i < bags.length; i++) {
-    // Setur bara ÓSÓTTA poka í leiðarvísinn
-    if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
-      coords.push(bags[i].lat + ',' + bags[i].lng);
-    }
-  }
-  
-  if (coords.length === 0) { notify('Engir pokar bíða sóttar'); return; }
+  if (coords.length === 0) { notify('Engir pokar bíða'); return; }
   var url = 'https://www.google.com/maps/dir/' + coords.join('/');
   window.open(url, '_blank');
 }
