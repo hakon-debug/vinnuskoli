@@ -222,7 +222,6 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       <h3>Kort af pokum</h3>
       <button class="btn-primary" onclick="openRouteMap()">Sækja poka (Google Maps)</button>
     </div>
-    <!-- Hér birtist kortið -->
     <div id="bagsMap" style="height: 350px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1rem; z-index: 1;"></div>
     
     <h3 style="font-size:14px; margin-bottom:8px;">Listi yfir staðsetningar</h3>
@@ -250,11 +249,12 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <button onclick="showPage('pg-taeki')">Verkfæri</button>
     <button onclick="showPage('pg-pokar')">Tilkynna poka</button>
   </div>
+  
   <div class="page active" id="pg-dash"><div id="myTaskCard"></div></div>
+  
   <div class="page" id="pg-dagbok">
     <div class="card" style="margin-bottom: 2rem;">
       <div class="card-title" style="margin-bottom:10px">Skrá dagbókarfærslu</div>
-      
       <div class="form-row" style="margin-bottom:8px;">
         <div class="form-group">
           <label>Skráðir í hóp</label>
@@ -265,17 +265,14 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
           <input type="number" id="diaryAttendance" min="0" placeholder="Fjöldi mættra" oninput="calcRatio()" />
         </div>
       </div>
-      
       <div id="diaryRatioText" style="font-size:13px; font-weight:600; color:var(--green); margin-bottom:12px; height:18px;"></div>
-      
       <div class="form-group"><textarea id="diaryText" rows="4" placeholder="Hvað gerðist í dag?"></textarea></div>
       <button class="btn-primary" id="diarySaveBtn" onclick="saveDiary()">Vista færslu</button>
     </div>
-
     <h3 style="font-size:14px; font-weight:600; margin-bottom:12px;">Eldri færslur</h3>
     <div id="myDiaryList" style="margin-bottom:1rem"></div>
-    
   </div>
+  
   <div class="page" id="pg-taeki">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <h3 style="font-size:16px;font-weight:600">Verkfæraskrá</h3>
@@ -293,10 +290,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <div class="card">
       <div class="card-title">Tilkynna fulla ruslapoka</div>
       <div class="card-sub">Ýttu á GPS, EÐA smelltu á kortið til að velja staðsetningu handvirkt.</div>
-      
-      <!-- LÍTIÐ KORT TIL AÐ VELJA STAÐSETNINGU -->
       <div id="reportMap" style="height: 220px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); margin-bottom: 12px; z-index: 1;"></div>
-      
       <div class="form-row">
         <div class="form-group">
           <label>Fjöldi poka</label>
@@ -306,22 +300,18 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
           <button class="btn-outline" style="width:100%; height:37px; border-color:var(--green); color:var(--green);" onclick="getGPS()"><span id="gpsStatus">📍 Sækja GPS hnit</span></button>
         </div>
       </div>
-      
       <div class="form-group">
         <label>Lýsing á staðsetningu (Valfrjálst)</label>
         <input type="text" id="bagLoc" placeholder="t.d. Við bláa bekkinn á göngustígnum" />
       </div>
-      
       <input type="hidden" id="bagLat" />
       <input type="hidden" id="bagLng" />
-      
       <button class="btn-primary" id="bagSaveBtn" onclick="saveBags()">Tilkynna poka</button>
     </div>
-    
     <h3 style="font-size:14px; margin-bottom:8px;">Ykkar tilkynningar í dag</h3>
     <div id="myBagsList"></div>
   </div>
-</div> <!-- ENDA SECTION-FLOKKSTJORI HÉR -->
+</div>
 
 <div class="section" id="section-admin">
   <div class="admin-tabs">
@@ -332,6 +322,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <button class="admin-tab" onclick="showAdmin('adm-taeki')">Verkfæri</button>
     <button class="admin-tab" onclick="showAdmin('adm-history')">Saga</button>
   </div>
+  
   <div class="admin-page active" id="adm-overview">
     <div class="filter-row">
       <h3>Yfirlit dagsins</h3>
@@ -341,6 +332,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <h3 style="font-size:14px; font-weight:600; margin:1rem 0 0.5rem 0;">Staða flokka</h3>
     <div id="overviewGroups"></div>
   </div>
+  
   <div class="admin-page active" id="adm-groups">
     <div class="card" id="groupFormCard">
       <div class="card-title" id="groupFormTitle" style="margin-bottom:1rem">Bæta við flokki</div>
@@ -364,6 +356,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     </div>
     <div id="adminGroupList"></div>
   </div>
+  
   <div class="admin-page" id="adm-tasks">
     <div class="card" id="taskFormCard">
       <div class="card-title" id="taskFormTitle" style="margin-bottom:1rem">Bæta við verkefni</div>
@@ -391,30 +384,31 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <div class="filter-row"><h3>Verkefnalisti</h3></div>
     <div id="taskListAdmin"></div>
   </div>
+  
   <div class="admin-page" id="adm-dagbok">
     <div class="filter-row">
       <h3>Dagbókarfærslur</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <!-- NÝTT: Dagsetningar filter -->
         <input type="date" id="diaryDateFilter" onchange="renderAdminDiary()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;outline:none;" />
-        <!-- GAMLA: Flokka filter -->
         <select id="diaryFilter" class="sm" onchange="renderAdminDiary()"><option value="">Allir flokkar</option></select>
       </div>
     </div>
     <div id="adminDiaryList"></div>
   </div>
+  
   <div class="admin-page" id="adm-taeki">
-  <div class="filter-row">
-    <h3>Verkfærasaga</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <input type="date" id="toolsDateFilter" onchange="renderAdminTools()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;outline:none;" />
-      <select id="toolsGroupFilter" class="sm" onchange="renderAdminTools()">
-        <option value="">Allir flokkar</option>
-      </select>
+    <div class="filter-row">
+      <h3>Verkfærasaga</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="date" id="toolsDateFilter" onchange="renderAdminTools()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;outline:none;" />
+        <select id="toolsGroupFilter" class="sm" onchange="renderAdminTools()">
+          <option value="">Allir flokkar</option>
+        </select>
+      </div>
     </div>
+    <div id="adminToolsList"></div>
   </div>
-  <div id="adminToolsList"></div>
-</div>
+  
   <div class="admin-page" id="adm-history">
     <div class="filter-row">
       <h3>Breytingasaga</h3>
@@ -443,38 +437,34 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 <div class="notif" id="notif"></div>
 
 <script>
+// --- ALMENNAR BREYTUR ---
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
 var ZONES = {'1':'Miðsvæðið', '2':'Álftanes', '3':'Urriðaholt'};
 var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
 var TOOLS = ['Arfasköfur','Hrífur - (stál)','Hrífur - (plast)','Sópar','Skóflur','Stungugafflar','Kantskerar','Fötur','Þríkrókar'];
 
-
 var currentUser = null;
 var groups = [], tasks = [], diary = [], appHistory = [], tools = [], leaders = [], bags = [];
+var map = null, markers = [];
+var reportMap = null, reportMarker = null;
 
+// --- API SAMSΚIPTI ---
 function apiCall(action, params, callback) {
-  // Búum til Form gagna hlut til að senda
   var formData = new URLSearchParams();
   formData.append('action', action);
-  
   for (var k in params) {
     var v = params[k];
     if (typeof v === 'object') v = JSON.stringify(v);
     formData.append(k, v);
   }
-
   fetch(API, {
     method: 'POST',
     body: formData,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   })
   .then(function(response) { return response.json(); })
-  .then(function(data) {
-    callback(data);
-  })
+  .then(function(data) { callback(data); })
   .catch(function(error) {
     console.error('Fetch villa:', error);
     callback({error: 'Tenging mistókst - athugaðu netsamband'});
@@ -496,67 +486,25 @@ function loadAll() {
     tools = data.tools || [];
     bags = data.bags || [];
     
-    if (!groups.length) seedGroups();
-    else if (!tasks.length) seedTasks();
-    else {
-      // Birtum alltaf forsíðugögnin til öryggis
-      
-      renderPublic();
-      renderBags();
-      // NÝTT: Ef notandi ER innskráður (úr localStorage), uppfærum við hans skjái
-      if (currentUser) {
-        if (currentUser.role === 'admin') {
-          // Finnur hvaða admin flipi er opinn og teiknar hann upp aftur
-          var activeAdminTab = document.querySelector('.admin-page.active');
-          if (activeAdminTab) showAdmin(activeAdminTab.id);
-        } else {
-          // Teiknar upplýsingar flokkstjórans um leið og gögnin koma inn
-          renderMyTask(); 
-          renderMyDiary();
-          if (document.getElementById('pg-taeki').classList.contains('active')) {
-            loadTodayTools();
-          }
-        }
+    renderPublic();
+    renderBags();
+    
+    if (currentUser) {
+      if (currentUser.role === 'admin') {
+        var activeAdminTab = document.querySelector('.admin-page.active');
+        if (activeAdminTab) showAdmin(activeAdminTab.id);
+      } else {
+        renderMyTask(); 
+        renderMyDiary();
+        if (document.getElementById('pg-taeki').classList.contains('active')) { loadTodayTools(); }
       }
     }
   });
 }
 
-function seedGroups() {
-  groups = [
-    {id:'g1',name:'Alli, Örvar, Balli og Númi',exp:2,taskId:''},
-    {id:'g2',name:'Dúi, Þór, Gummi, Emil og Arnar',exp:3,taskId:''},
-    {id:'g3',name:'Henrik, Bjarki, Sóllilja, Ragnheiður og Katrín',exp:1,taskId:''},
-    {id:'g4',name:'Kolbeinski, Sindri og Tómas',exp:2,taskId:''},
-    {id:'g5',name:'Flokkur 5',exp:2,taskId:''},
-    {id:'g6',name:'Flokkur 6',exp:1,taskId:''},
-    {id:'g7',name:'Flokkur 7',exp:3,taskId:''},
-    {id:'g8',name:'Flokkur 8',exp:2,taskId:''},
-    {id:'g9',name:'Flokkur 9',exp:1,taskId:''},
-    {id:'g10',name:'Flokkur 10',exp:2,taskId:''},
-    {id:'g11',name:'Flokkur 11',exp:3,taskId:''},
-    {id:'g12',name:'Flokkur 12',exp:1,taskId:''},
-    {id:'g13',name:'Flokkur 13',exp:2,taskId:''},
-    {id:'g14',name:'Flokkur 14',exp:3,taskId:''},
-    {id:'g15',name:'Flokkur 15',exp:1,taskId:''}
-  ];
-  apiCall('saveGroups', {data: groups}, function() { seedTasks(); });
-}
-
-function seedTasks() {
-  tasks = [
-    {id:'t1',name:'Bæjargarðar',diff:2,loc:'Merkt á maps',desc:'Snyrta beð meðfram svæðinu',mapUrl:'https://maps.app.goo.gl/gATc1LenE8rUG5sl9'},
-    {id:'t2',name:'Þrihyrningsbeð',diff:3,loc:'BBking (4)',desc:'Snyrta beð og týna arfa',mapUrl:'https://maps.app.goo.gl/NW5iSWc442SQCYQs5'},
-    {id:'t3',name:'Arnarnes',diff:1,loc:'Arnarnes',desc:'Tína rusla og hreinsa',mapUrl:''},
-    {id:'t4',name:'Lundaból',diff:2,loc:'Lundaból',desc:'Slá gras og tína greinar',mapUrl:''}
-  ];
-  apiCall('saveTasks', {data: tasks}, function() { renderPublic(); });
-}
-
+// --- HJÁLPARFÖLL ---
 function getTask(id) {
-  for (var i = 0; i < tasks.length; i++) {
-    if (String(tasks[i].id) === String(id)) return tasks[i];
-  }
+  for (var i = 0; i < tasks.length; i++) { if (String(tasks[i].id) === String(id)) return tasks[i]; }
   return null;
 }
 function getIcelandicDate(d) {
@@ -570,188 +518,48 @@ function nowStr()   { var d = new Date(); return d.toLocaleDateString('is-IS') +
 
 function logHistory(type, detail, taskId, taskName, gid, groupName) {
   var row = {
-    date:        todayISO(),
-    dateStr:     todayStr(),
-    timestamp:   nowStr(),
-    user:        currentUser ? currentUser.username : '',
+    date: todayISO(), dateStr: todayStr(), timestamp: nowStr(),
+    user: currentUser ? currentUser.username : '',
     displayName: currentUser ? (currentUser.displayName || currentUser.username) : '',
-    gid:         gid || (currentUser ? currentUser.gid || '' : ''),
-    group:       groupName || '',
-    type:        type,
-    taskId:      taskId || '',
-    taskName:    taskName || '',
-    text:        detail || ''
+    gid: gid || (currentUser ? currentUser.gid || '' : ''), group: groupName || '',
+    type: type, taskId: taskId || '', taskName: taskName || '', text: detail || ''
   };
   appHistory.push(row);
   apiCall('addHistory', {row: row}, function() {});
 }
 
-function renderPublic() {
-  var d = new Date();
-  document.getElementById('todayDate').textContent = getIcelandicDate(d);
-  var grid = document.getElementById('publicGrid');
-  if (!groups.length) { grid.innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir flokkar skráðir.</p>'; return; }
-  
-  var html = '';
-  for (var i = 0; i < groups.length; i++) {
-    var g = groups[i];
-    var t = getTask(g.taskId);
-    html += '<div class="group-card" onclick="openModal(\'' + g.id + '\')">';
-    html += '<div class="group-name">' + g.name + '</div>';
-    html += '<div class="group-task">' + (t ? t.name : 'Ekkert verkefni') + '</div>';
-    
-    if (t) {
-      html += '<div class="group-loc">&#128205; ' + (t.loc || '') + '</div>';
-    }
-
-    var groupLeaders = [];
-    for (var j = 0; j < leaders.length; j++) {
-      if (String(leaders[j].gid) === String(g.id)) {
-        var pNum = leaders[j].phone ? ': ' + leaders[j].phone : '';
-        groupLeaders.push('📞 ' + leaders[j].name + pNum);
-      }
-    }
-
-    if (groupLeaders.length > 0) {
-      html += '<div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:8px; line-height:1.6;">' + groupLeaders.join('<br>') + '</div>';
-    }
-
-    if (t && t.mapUrl) {
-       html += '<a class="map-pill" style="margin-top:8px;" href="' + t.mapUrl + '" target="_blank" onclick="event.stopPropagation()">&#128506; Opna kort</a>';
-    }
-    
-    html += '</div>';
-  }
-  
-  var wrap = document.createElement('div');
-  wrap.className = 'groups-grid';
-  wrap.id = 'publicGrid';
-  wrap.innerHTML = html;
-  grid.parentNode.replaceChild(wrap, grid);
+function notify(msg) {
+  var n = document.getElementById('notif');
+  n.textContent = msg; n.classList.add('show');
+  setTimeout(function() { n.classList.remove('show'); }, 2500);
 }
 
-function openModal(gid) {
-  var g = null, t = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
-  if (!g) return;
-  t = getTask(g.taskId);
-  if (!t) return;
-  
-  var m = document.createElement('div');
-  m.className = 'modal-overlay';
-  m.innerHTML = '<div class="modal"><div class="modal-hdr"><div><div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:4px">' + g.name + '</div><div class="modal-title">' + t.name + '</div></div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&#215;</button></div><p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">' + (t.desc || '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>' + (t.mapUrl ? '<a href="' + t.mapUrl + '" target="_blank" class="map-pill" style="font-size:13px;padding:8px 14px">&#128506; Opna á Google Maps</a>' : '<p style="font-size:12px;color:var(--text-3)">Engin staðsetning skráð</p>') + '</div>';
-  
-  document.body.appendChild(m);
-  m.addEventListener('click', function(e) { if (e.target === m) m.parentNode.removeChild(m); });
-}
-
+// --- STJÓRNUN Á FLIPUM (UI) ---
 function showSection(s) {
   var secs = document.querySelectorAll('.section');
   for (var i = 0; i < secs.length; i++) secs[i].classList.remove('active');
   document.getElementById('section-' + s).classList.add('active');
 }
 
-function doLogin() {
-  var u = document.getElementById('loginUser').value.trim();
-  var p = document.getElementById('loginPass').value.trim();
-  var err = document.getElementById('loginErr');
-  var btn = document.getElementById('loginBtn');
+function showPublic(p) {
+  document.getElementById('pub-dagskra').classList.remove('active');
+  document.getElementById('pub-pokar').classList.remove('active');
+  document.getElementById(p).classList.add('active');
   
-  err.textContent = ''; 
+  var btns = document.querySelectorAll('#section-public .inner-nav button');
+  btns[0].classList.toggle('active', p === 'pub-dagskra');
+  btns[1].classList.toggle('active', p === 'pub-pokar');
 
-  if (!u || !p) {
-    err.textContent = 'Vinsamlegast sláðu inn notandanafn og lykilorð';
-    return;
+  if (p === 'pub-pokar') {
+    renderBags();
+    if(map) { setTimeout(function() { map.invalidateSize(); }, 50); }
   }
-
-  btn.textContent = 'Skrái inn...';
-  btn.disabled = true;
-
-  apiCall('login', { username: u, password: p }, function(response) {
-    btn.textContent = 'Skrá inn';
-    btn.disabled = false;
-
-    if (response.error || !response.ok) {
-      err.textContent = response.error || 'Tenging mistókst';
-      return;
-    }
-
-    currentUser = {
-      username: response.user.username,
-      role: response.user.role,
-      gid: response.user.gid || '',
-      displayName: response.user.displayName || response.user.username
-    };
-    
-    // NÝTT: Vistum notandann í minni vafrans (localStorage)
-    localStorage.setItem('vg_user', JSON.stringify(currentUser));
-    
-    document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
-    logHistory('login', currentUser.displayName + ' skráði sig inn', '', '', '', '');
-    
-    document.getElementById('loginPass').value = '';
-
-    if (currentUser.role === 'admin') { 
-      showSection('admin'); 
-      showAdmin('adm-overview');
-    } else { 
-      showSection('flokkstjori'); 
-      showPage('pg-dash');
-      renderMyTask(); 
-      renderMyDiary();
-    }
-  });
-}
-
-function restoreSession() {
-  var savedUser = localStorage.getItem('vg_user');
-  if (savedUser) {
-    try {
-      currentUser = JSON.parse(savedUser);
-      document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
-      
-      // Sýnum rétta valmynd (Admin eða Flokkstjóri)
-      if (currentUser.role === 'admin') { 
-        showSection('admin'); 
-      } else { 
-        showSection('flokkstjori'); 
-        showPage('pg-dash');
-      }
-    } catch(e) {
-      localStorage.removeItem('vg_user'); // Ef gögnin voru skemmd
-    }
-  }
-}
-
-function doLogout() {
-  logHistory('login', (currentUser.displayName) + ' skráði sig út', '', '', '', '');
-  
-  localStorage.removeItem('vg_user');
-  currentUser = null;
-  
-  document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
-  
-  // Hreinsa og fela allt hjá flokkstjóra/admin
-  document.getElementById('myDiaryList').innerHTML = '';
-  document.getElementById('myTaskCard').innerHTML = '';
-  document.getElementById('myBagsList').innerHTML = '';
-  
-  // NÝTT OG BÆTT: Fela allar .page síður, alveg sama hvar þær eru staddar
-  var flokkstjoriPages = document.querySelectorAll('.page');
-  for (var i = 0; i < flokkstjoriPages.length; i++) {
-    flokkstjoriPages[i].classList.remove('active');
-  }
-
-  showSection('public');
-  renderPublic();
 }
 
 function showPage(p) {
-  // Sleggjan: Felum ALLAR síður (.page), alveg sama hvar þær eru í HTML-inu
   var pages = document.querySelectorAll('.page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
   
-  // Opnum þá réttu
   var targetPage = document.getElementById(p);
   if (targetPage) targetPage.classList.add('active');
   
@@ -765,7 +573,6 @@ function showPage(p) {
   if (p === 'pg-taeki') loadTodayTools();
   if (p === 'pg-pokar') {
     renderMyBags();
-    // Mjög mikilvægt delay hér svo kassinn verði "sýnilegur" áður en kortið reiknar stærðina
     setTimeout(function() { initReportMap(); }, 50);
   }
 }
@@ -787,16 +594,127 @@ function showAdmin(p) {
   if (p === 'adm-history') renderAdminHistory();
 }
 
+// --- INNSKRÁNING ---
+function doLogin() {
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value.trim();
+  var err = document.getElementById('loginErr');
+  var btn = document.getElementById('loginBtn');
+  
+  err.textContent = ''; 
+  if (!u || !p) { err.textContent = 'Vinsamlegast sláðu inn notandanafn og lykilorð'; return; }
+
+  btn.textContent = 'Skrái inn...'; btn.disabled = true;
+
+  apiCall('login', { username: u, password: p }, function(response) {
+    btn.textContent = 'Skrá inn'; btn.disabled = false;
+    if (response.error || !response.ok) { err.textContent = response.error || 'Tenging mistókst'; return; }
+
+    currentUser = {
+      username: response.user.username, role: response.user.role,
+      gid: response.user.gid || '', displayName: response.user.displayName || response.user.username
+    };
+    
+    localStorage.setItem('vg_user', JSON.stringify(currentUser));
+    
+    document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
+    logHistory('login', currentUser.displayName + ' skráði sig inn', '', '', '', '');
+    
+    document.getElementById('loginPass').value = '';
+
+    if (currentUser.role === 'admin') { 
+      showSection('admin'); showAdmin('adm-overview');
+    } else { 
+      showSection('flokkstjori'); showPage('pg-dash');
+      renderMyTask(); renderMyDiary();
+    }
+  });
+}
+
+function restoreSession() {
+  var savedUser = localStorage.getItem('vg_user');
+  if (savedUser) {
+    try {
+      currentUser = JSON.parse(savedUser);
+      document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
+      if (currentUser.role === 'admin') { showSection('admin'); } 
+      else { showSection('flokkstjori'); showPage('pg-dash'); }
+    } catch(e) { localStorage.removeItem('vg_user'); }
+  }
+}
+
+function doLogout() {
+  logHistory('login', (currentUser.displayName) + ' skráði sig út', '', '', '', '');
+  localStorage.removeItem('vg_user');
+  currentUser = null;
+  
+  document.getElementById('topbarRight').innerHTML = '<button class="btn-outline" onclick="showSection(\'login\')">Innskráning</button>';
+  document.getElementById('myDiaryList').innerHTML = '';
+  document.getElementById('myTaskCard').innerHTML = '';
+  document.getElementById('myBagsList').innerHTML = '';
+  
+  var flokkstjoriPages = document.querySelectorAll('.page');
+  for (var i = 0; i < flokkstjoriPages.length; i++) { flokkstjoriPages[i].classList.remove('active'); }
+
+  showSection('public');
+  renderPublic();
+}
+
+// --- FORSÍÐA (Almenningur) ---
+function renderPublic() {
+  var d = new Date();
+  document.getElementById('todayDate').textContent = getIcelandicDate(d);
+  var grid = document.getElementById('publicGrid');
+  if (!groups.length) { grid.innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir flokkar skráðir.</p>'; return; }
+  
+  var html = '';
+  for (var i = 0; i < groups.length; i++) {
+    var g = groups[i];
+    var t = getTask(g.taskId);
+    html += '<div class="group-card" onclick="openModal(\'' + g.id + '\')">';
+    html += '<div class="group-name">' + g.name + '</div>';
+    html += '<div class="group-task">' + (t ? t.name : 'Ekkert verkefni') + '</div>';
+    if (t) { html += '<div class="group-loc">&#128205; ' + (t.loc || '') + '</div>'; }
+
+    var groupLeaders = [];
+    for (var j = 0; j < leaders.length; j++) {
+      if (String(leaders[j].gid) === String(g.id)) {
+        var pNum = leaders[j].phone ? ': ' + leaders[j].phone : '';
+        groupLeaders.push('📞 ' + leaders[j].name + pNum);
+      }
+    }
+    if (groupLeaders.length > 0) { html += '<div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:8px; line-height:1.6;">' + groupLeaders.join('<br>') + '</div>'; }
+    if (t && t.mapUrl) { html += '<a class="map-pill" style="margin-top:8px;" href="' + t.mapUrl + '" target="_blank" onclick="event.stopPropagation()">&#128506; Opna kort</a>'; }
+    html += '</div>';
+  }
+  
+  var wrap = document.createElement('div');
+  wrap.className = 'groups-grid'; wrap.id = 'publicGrid'; wrap.innerHTML = html;
+  grid.parentNode.replaceChild(wrap, grid);
+}
+
+function openModal(gid) {
+  var g = null, t = null;
+  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
+  if (!g) return;
+  t = getTask(g.taskId);
+  if (!t) return;
+  
+  var m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.innerHTML = '<div class="modal"><div class="modal-hdr"><div><div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;margin-bottom:4px">' + g.name + '</div><div class="modal-title">' + t.name + '</div></div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">&#215;</button></div><p style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">' + (t.desc || '') + '</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="meta-tag">&#128205; ' + (t.loc||'') + '</span></div>' + (t.mapUrl ? '<a href="' + t.mapUrl + '" target="_blank" class="map-pill" style="font-size:13px;padding:8px 14px">&#128506; Opna á Google Maps</a>' : '<p style="font-size:12px;color:var(--text-3)">Engin staðsetning skráð</p>') + '</div>';
+  
+  document.body.appendChild(m);
+  m.addEventListener('click', function(e) { if (e.target === m) m.parentNode.removeChild(m); });
+}
+
+// --- VERKEFNI (Flokkstjórar) ---
 function hasRequestedTaskToday(gid) {
   var today = todayISO();
   for (var i = 0; i < appHistory.length; i++) {
     var h = appHistory[i];
-    var rawDate = h.date || h.dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
-    if (h.gid === gid && h.type === 'assigned' && cleanDate === today) {
-      return true;
-    }
+    var cleanDate = String(h.date || h.dateStr || '').split('T')[0];
+    if (h.gid === gid && h.type === 'assigned' && cleanDate === today) { return true; }
   }
   return false;
 }
@@ -813,15 +731,14 @@ function renderMyTask() {
     if (t.mapUrl) html += '<a class="map-pill" href="' + t.mapUrl + '" target="_blank" style="display:inline-flex;margin-bottom:14px;font-size:12px">&#128506; Opna á Google Maps</a><br>';
   }
   
-  // Tryggjum að nákvæmlega þessi tvö nöfn fái stjórnenda-textann (case sensitive)
   var groupName = g ? (g.name || '') : '';
   var isSpecialGroup = (groupName === 'Jokers' || groupName === 'EGO');
   
   if (isSpecialGroup) {
-    // 1. AÐEINS Jokers og EGO sjá þetta
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Ykkar verkefnum er stýrt beint af yfirflokkstjórum.</div>';
+  } else if (hasRequestedTaskToday(currentUser.gid)) {
+    html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Þið hafið þegar fengið úthlutað nýju verkefni í dag.</div>';
   } else {
-    // 3. Venjulegir hópar sem eiga eftir að draga verkefni sjá takkann!
     html += '<button class="btn-ghost" style="margin-top:10px;" onclick="requestNewTask()">&#9889; Biðja um nýtt verkefni</button>';
   }
   
@@ -835,26 +752,15 @@ function requestNewTask() {
   
   var assignedTaskIds = [];
   for (var i = 0; i < groups.length; i++) {
-    if (groups[i].taskId) {
-      assignedTaskIds.push(String(groups[i].taskId));
-    }
+    if (groups[i].taskId) assignedTaskIds.push(String(groups[i].taskId));
   }
 
   var ok = [];
   for (var i = 0; i < tasks.length; i++) {
-    
-    // NÝTT: Nákvæmari stýring á erfiðleikastigum!
     var isDiffOk = false;
-    if (g.exp === 1) {
-      // Byrjendur fá bara 1
-      isDiffOk = (tasks[i].diff === 1);
-    } else if (g.exp === 2) {
-      // Miðlungs fá bara 2
-      isDiffOk = (tasks[i].diff === 2);
-    } else if (g.exp === 3) {
-      // Reyndir fá bæði 2 og 3
-      isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3);
-    }
+    if (g.exp === 1) { isDiffOk = (tasks[i].diff === 1); } 
+    else if (g.exp === 2) { isDiffOk = (tasks[i].diff === 2); } 
+    else if (g.exp === 3) { isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3); }
     
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
     var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
@@ -866,19 +772,14 @@ function requestNewTask() {
     }
   }
   
-  if (!ok.length) { 
-    notify('Engin laus verkefni tiltæk fyrir ykkar svæði eða reynslustig.'); 
-    return; 
-  }
+  if (!ok.length) { notify('Engin laus verkefni tiltæk fyrir ykkar svæði eða reynslustig.'); return; }
   
   var pick = ok[Math.floor(Math.random() * ok.length)];
   var old = getTask(g.taskId);
   
-  // Sjálfvirk klárun á gamla verkefninu
   if (old) {
     logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
-    old.completed = 'Já';
-    old.completedDate = todayISO();
+    old.completed = 'Já'; old.completedDate = todayISO();
     apiCall('upsertRow', {sheet: 'tasks', row: old}, function() {});
   }
   
@@ -887,24 +788,21 @@ function requestNewTask() {
   
   apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
     if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
-    loadAll(); 
-    renderMyTask(); 
-    notify('Nýtt verkefni dregið!');
+    loadAll(); renderMyTask(); notify('Nýtt verkefni dregið!');
   });
 }
 
+// --- DAGBÓK (Flokkstjórar) ---
 function renderMyDiary() {
   var entries = [];
   for (var i = 0; i < diary.length; i++) {
     if (String(diary[i].gid) === String(currentUser.gid)) entries.push(diary[i]);
   }
-  
   entries.reverse(); 
 
   var html = '';
-  if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2)">Engar færslur enn.</p>';
+  if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Engar færslur enn.</p>';
   else for (var i = 0; i < entries.length; i++) {
-
     var attHtml = '';
     if (entries[i].attendance && entries[i].registered) {
       var pct = Math.round((entries[i].attendance / entries[i].registered) * 100);
@@ -912,9 +810,7 @@ function renderMyDiary() {
     } else if (entries[i].attendance) {
       attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
     }
-    var rawDate = entries[i].dateStr || entries[i].date || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
+    var cleanDate = String(entries[i].dateStr || entries[i].date || '').split('T')[0];
     html += '<div class="diary-entry"><div class="diary-date">' + cleanDate + attHtml + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
   }
   document.getElementById('myDiaryList').innerHTML = html;
@@ -925,39 +821,30 @@ function calcRatio() {
   var reg = parseFloat(document.getElementById('diaryRegistered').value);
   var att = parseFloat(document.getElementById('diaryAttendance').value);
   var txtEl = document.getElementById('diaryRatioText');
-  
   if (!isNaN(reg) && !isNaN(att) && reg > 0) {
     var pct = Math.round((att / reg) * 100);
     txtEl.textContent = 'Hlutfall mættra: ' + pct + '%';
-  } else {
-    txtEl.textContent = '';
-  }
+  } else { txtEl.textContent = ''; }
 }
 
 function loadTodayDiary() {
   var today = todayISO();
   var found = null;
-  
   for (var i = 0; i < diary.length; i++) {
-    var rawDate = diary[i].date || diary[i].dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
+    var cleanDate = String(diary[i].date || diary[i].dateStr || '').split('T')[0];
     if (String(diary[i].gid).trim() === String(currentUser.gid).trim() && cleanDate === today) {
-      found = diary[i];
-      break; 
+      found = diary[i]; break; 
     }
   }
 
   var btn = document.getElementById('diarySaveBtn');
-  
   if (found) {
     document.getElementById('diaryText').value = found.text || '';
     document.getElementById('diaryAttendance').value = found.attendance || '';
     document.getElementById('diaryRegistered').value = found.registered || '';
-    if (btn) btn.textContent = 'Uppfæra færslu dagsins'; // Geri textann skýrari
+    if (btn) btn.textContent = 'Uppfæra færslu dagsins';
     calcRatio();
-  }
-  else {
+  } else {
     document.getElementById('diaryText').value = '';
     document.getElementById('diaryAttendance').value = '';
     document.getElementById('diaryRegistered').value = '';
@@ -970,57 +857,38 @@ function saveDiary() {
   var txt = document.getElementById('diaryText').value.trim();
   var att = document.getElementById('diaryAttendance').value.trim();
   var reg = document.getElementById('diaryRegistered').value.trim(); 
-  
   if (!txt) return;
 
-  // --- 1. SLÖKKVUM Á TAKKANUM ---
   var btn = document.getElementById('diarySaveBtn');
   var originalText = 'Vista færslu';
   if (btn) {
     originalText = btn.textContent;
     btn.textContent = 'Vistar... andartak';
-    btn.disabled = true;
-    btn.style.opacity = '0.7'; // Gerir takkann aðeins grárri
+    btn.disabled = true; btn.style.opacity = '0.7';
   }
-  // ------------------------------
 
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
   
   var row = {
-    gid: currentUser.gid, 
-    group: g ? g.name : '', 
-    date: todayISO(), 
-    dateStr: todayStr(), 
-    text: txt,
-    attendance: att,
-    registered: reg,
-    user: currentUser.username
+    gid: currentUser.gid, group: g ? g.name : '', 
+    date: todayISO(), dateStr: todayStr(), 
+    text: txt, attendance: att, registered: reg, user: currentUser.username
   };
   
   var histDetail = txt;
   if (reg && att) {
     var pct = Math.round((att / reg) * 100);
     histDetail += ' (Mæting: ' + att + '/' + reg + ' - ' + pct + '%)';
-  } else if (att) {
-    histDetail += ' (Mæting: ' + att + ')';
-  }
+  } else if (att) { histDetail += ' (Mæting: ' + att + ')'; }
   
   apiCall('upsertDiary', {row: row}, function(res) {
-    
-    // --- 2. KVEIKJUM Á TAKKANUM AFTUR ---
-    if (btn) {
-      btn.textContent = originalText;
-      btn.disabled = false;
-      btn.style.opacity = '1';
-    }
-    // ------------------------------------
-
+    if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
     if(res.error) { notify('Gat ekki vistað: ' + res.error); return; }
+    
     notify('Dagbók vistuð');
     logHistory('diary', histDetail, '', '', currentUser.gid, g ? g.name : '');
     
-    // 3. UPPFÆRUM MINNIÐ (Í staðinn fyrir loadAll)
     var existing = false;
     for (var j = 0; j < diary.length; j++) {
       var dDate = (diary[j].date || diary[j].dateStr || '').split('T')[0];
@@ -1033,20 +901,16 @@ function saveDiary() {
   });
 }
 
+// --- VERKFÆRI (Flokkstjórar) ---
 var myCurrentTools = [];
 
 function loadTodayTools() {
   var today = todayISO();
   myCurrentTools = [];
-  
-  for (var i = 0; i < TOOLS.length; i++) {
-    myCurrentTools.push({ name: TOOLS[i], taken: 0, returned: 0 });
-  }
+  for (var i = 0; i < TOOLS.length; i++) { myCurrentTools.push({ name: TOOLS[i], taken: 0, returned: 0 }); }
 
   for (var i = 0; i < tools.length; i++) {
-    var rawDate = tools[i].date || tools[i].dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
+    var cleanDate = String(tools[i].date || tools[i].dateStr || '').split('T')[0];
     if (String(tools[i].gid).trim() === String(currentUser.gid).trim() && cleanDate === today) {
       for (var j = 0; j < myCurrentTools.length; j++) {
         if (myCurrentTools[j].name === tools[i].name) {
@@ -1080,13 +944,9 @@ function renderTools() {
     var missing = t.taken - t.returned;
     var statusHtml = '';
     
-    if (t.taken === 0) {
-      statusHtml = '<span class="tool-status-pill" style="background:var(--bg); color:var(--text-3);">Ekkert tekið</span>';
-    } else if (missing > 0) {
-      statusHtml = '<span class="tool-status-pill" style="background:var(--red-light); color:var(--red);">Vantar ' + missing + '</span>';
-    } else {
-      statusHtml = '<span class="tool-status-pill" style="background:var(--green-light); color:var(--green);">Öllu skilað ✔️</span>';
-    }
+    if (t.taken === 0) { statusHtml = '<span class="tool-status-pill" style="background:var(--bg); color:var(--text-3);">Ekkert tekið</span>'; } 
+    else if (missing > 0) { statusHtml = '<span class="tool-status-pill" style="background:var(--red-light); color:var(--red);">Vantar ' + missing + '</span>'; } 
+    else { statusHtml = '<span class="tool-status-pill" style="background:var(--green-light); color:var(--green);">Öllu skilað ✔️</span>'; }
 
     html += `
       <div class="tool-card">
@@ -1099,7 +959,7 @@ function renderTools() {
             <label>Tekið í morgun</label>
             <div class="counter">
               <button class="counter-btn minus" onclick="adjTool(${i},'taken',-1)">−</button>
-              <input type="number" id="tak${i}" value="${t.taken}" onchange="adjManual(${i},'taken',this.value)" />
+              <input type="number" value="${t.taken}" onchange="adjManual(${i},'taken',this.value)" />
               <button class="counter-btn" onclick="adjTool(${i},'taken',1)">+</button>
             </div>
           </div>
@@ -1107,7 +967,7 @@ function renderTools() {
             <label>Skilað núna</label>
             <div class="counter">
               <button class="counter-btn minus" onclick="adjTool(${i},'returned',-1)">−</button>
-              <input type="number" id="ret${i}" value="${t.returned}" onchange="adjManual(${i},'returned',this.value)" />
+              <input type="number" value="${t.returned}" onchange="adjManual(${i},'returned',this.value)" />
               <button class="counter-btn" onclick="adjTool(${i},'returned',1)">+</button>
             </div>
           </div>
@@ -1135,11 +995,8 @@ function adjManual(i, field, value) {
 }
 
 function returnAllTools() {
-  for (var i = 0; i < myCurrentTools.length; i++) {
-    myCurrentTools[i].returned = myCurrentTools[i].taken;
-  }
-  renderTools();
-  notify('Allt merkt sem skilað. Mundu að vista!');
+  for (var i = 0; i < myCurrentTools.length; i++) { myCurrentTools[i].returned = myCurrentTools[i].taken; }
+  renderTools(); notify('Allt merkt sem skilað. Mundu að vista!');
 }
 
 function saveTools() {
@@ -1147,72 +1004,34 @@ function saveTools() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
 
-  var toolsToSave = [];
-  var summaryLog = [];
-  var hasMissing = false;
-  var hasAnyActivity = false; // Til að athuga hvort eitthvað yfir höfuð var skráð
+  var toolsToSave = [], summaryLog = [], hasMissing = false, hasAnyActivity = false;
 
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
-    
-    // NÝTT: Við pushum ÖLLUM verkfærum, meira að segja ef þau eru 0. 
-    // Þannig yfirskrifum við mistök ef fólk breytir til baka í 0.
-    toolsToSave.push({
-      gid: currentUser.gid,
-      group: g ? g.name : '',
-      date: today,
-      name: t.name,
-      taken: t.taken,
-      returned: t.returned
-    });
-    
-    if (t.taken > 0 || t.returned > 0) {
-      hasAnyActivity = true;
-    }
-    
+    toolsToSave.push({ gid: currentUser.gid, group: g ? g.name : '', date: today, name: t.name, taken: t.taken, returned: t.returned });
+    if (t.taken > 0 || t.returned > 0) { hasAnyActivity = true; }
     var missing = t.taken - t.returned;
-    if (missing > 0) {
-      summaryLog.push(t.name + ' (Vantar ' + missing + ')');
-      hasMissing = true;
-    }
+    if (missing > 0) { summaryLog.push(t.name + ' (Vantar ' + missing + ')'); hasMissing = true; }
   }
 
-  // --- SLÖKKVUM Á TAKKANUM ---
   var btn = document.getElementById('toolsSaveBtn');
   var originalText = 'Vista skrá';
-  if (btn) {
-    originalText = btn.textContent;
-    btn.textContent = 'Vistar... andartak';
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
-  }
-  // ------------------------------
+  if (btn) { originalText = btn.textContent; btn.textContent = 'Vistar... andartak'; btn.disabled = true; btn.style.opacity = '0.7'; }
 
   apiCall('upsertTools', {tools: toolsToSave}, function(res) {
-    
-    // --- KVEIKJUM Á TAKKANUM AFTUR ---
-    if (btn) {
-      btn.textContent = originalText;
-      btn.disabled = false;
-      btn.style.opacity = '1';
-    }
-    // ------------------------------------
-
+    if (btn) { btn.textContent = originalText; btn.disabled = false; btn.style.opacity = '1'; }
     if(res.error) { notify('Villa: ' + res.error); return; }
     
-    // Skráum í söguna - ef ekkert var skráð þá segjum við það bara
     var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : (hasAnyActivity ? 'Öllum verkfærum skilað!' : 'Verkfæraskrá (Tóm)');
     logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
     notify('Verkfæraskrá vistuð');
     
-    // UPPFÆRUM MINNIÐ BEINT
     for (var j=0; j<toolsToSave.length; j++) {
       var found = false;
       for (var k=0; k<tools.length; k++) {
-        var tDate = (tools[k].date || tools[k].dateStr || '').split('T')[0];
+        var tDate = String(tools[k].date || tools[k].dateStr || '').split('T')[0];
         if (tools[k].gid === toolsToSave[j].gid && tDate === toolsToSave[j].date && tools[k].name === toolsToSave[j].name) {
-          tools[k].taken = toolsToSave[j].taken;
-          tools[k].returned = toolsToSave[j].returned;
+          tools[k].taken = toolsToSave[j].taken; tools[k].returned = toolsToSave[j].returned;
           found = true; break;
         }
       }
@@ -1221,8 +1040,339 @@ function saveTools() {
   });
 }
 
-var editingGroupId = null;
-var editingTaskId = null;
+// --- KORT / POKAR (Flokkstjórar og Forsíða) ---
+function initReportMap() {
+  if (!reportMap) {
+    reportMap = L.map('reportMap').setView([64.0886, -21.9066], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(reportMap);
+    reportMarker = L.marker([64.0886, -21.9066], {draggable: true}).addTo(reportMap);
+
+    reportMarker.on('dragend', function(e) {
+      var pos = e.target.getLatLng();
+      document.getElementById('bagLat').value = pos.lat;
+      document.getElementById('bagLng').value = pos.lng;
+      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
+    });
+
+    reportMap.on('click', function(e) {
+      reportMarker.setLatLng(e.latlng);
+      document.getElementById('bagLat').value = e.latlng.lat;
+      document.getElementById('bagLng').value = e.latlng.lng;
+      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
+    });
+  }
+  setTimeout(function() { reportMap.invalidateSize(); }, 200);
+}
+
+function getGPS() {
+  var btn = document.getElementById('gpsStatus');
+  btn.textContent = 'Leita...';
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      document.getElementById('bagLat').value = pos.coords.latitude;
+      document.getElementById('bagLng').value = pos.coords.longitude;
+      btn.textContent = '✔️ GPS Hnit fundin';
+      if (reportMap && reportMarker) {
+        reportMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+        reportMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+      }
+    }, function(err) {
+      btn.textContent = '❌ Tókst ekki'; notify('Gat ekki fundið staðsetningu. Er kveikt á GPS?');
+    });
+  } else { notify('Vafrinn styður ekki GPS'); }
+}
+
+function saveBags() {
+  var qty = document.getElementById('bagQty').value;
+  var loc = document.getElementById('bagLoc').value.trim();
+  var lat = document.getElementById('bagLat').value || (reportMarker ? reportMarker.getLatLng().lat : '');
+  var lng = document.getElementById('bagLng').value || (reportMarker ? reportMarker.getLatLng().lng : '');
+
+  if (!lat || !lng) { notify('Vinsamlegast veldu staðsetningu á kortinu'); return; }
+
+  var g = null;
+  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
+
+  var btn = document.getElementById('bagSaveBtn');
+  var origText = btn.textContent;
+  btn.textContent = 'Vistar...'; btn.disabled = true;
+
+  var theBag = {
+    id: 'b' + Date.now(), gid: currentUser.gid, groupName: g ? g.name : '',
+    date: todayISO(), qty: qty, loc: loc, lat: lat, lng: lng, pickedUp: '' 
+  };
+
+  apiCall('upsertRow', {sheet: 'bags', row: theBag}, function(res) {
+    btn.textContent = origText; btn.disabled = false;
+    if(res.error) { notify('Villa: ' + res.error); return; }
+    
+    notify('Pokar skráðir!');
+    bags.push(theBag);
+    document.getElementById('bagLoc').value = '';
+    document.getElementById('gpsStatus').textContent = '📍 Sækja GPS hnit';
+    renderMyBags();
+  });
+}
+
+function renderMyBags() {
+  var html = '';
+  var today = todayISO();
+  for (var i = 0; i < bags.length; i++) {
+    if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
+      var isPicked = (bags[i].pickedUp === 'Já');
+      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Bíður sóttar</span>';
+      
+      html += '<div class="group-list-item">';
+      html += '<div><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
+      html += '<div>' + statusTag + '</div>';
+      html += '</div>';
+    }
+  }
+  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar skráðir í dag.</p>';
+  document.getElementById('myBagsList').innerHTML = html;
+}
+
+function renderBags() {
+  var html = '', activeBags = [], today = todayISO();
+  
+  for (var i = 0; i < bags.length; i++) {
+    if (String(bags[i].date).includes(today) && bags[i].pickedUp !== 'Já') {
+      activeBags.push(bags[i]);
+      html += '<div class="group-list-item">';
+      html += '<div><strong>' + bags[i].groupName + ' (' + bags[i].qty + ' pokar)</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
+      html += '<div style="display:flex;gap:6px;">';
+      html += '<a class="btn-outline" href="https://maps.google.com/?q=' + bags[i].lat + ',' + bags[i].lng + '" target="_blank" style="padding:4px 8px; font-size:11px;">Kort</a>';
+      html += '<button class="btn-outline" onclick="markBagPickedUp(\'' + bags[i].id + '\')" style="padding:4px 8px; font-size:11px; border-color:var(--green); color:var(--green)">✔️ Sótt</button>';
+      html += '</div></div>';
+    }
+  }
+  
+  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar bíða þess að vera sóttir.</p>';
+  document.getElementById('publicBagsList').innerHTML = html;
+
+  if (!map) {
+    map = L.map('bagsMap').setView([64.0886, -21.9066], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  }
+  setTimeout(function() { map.invalidateSize(); }, 200);
+
+  for(var i=0; i<markers.length; i++) { map.removeLayer(markers[i]); }
+  markers = [];
+
+  for (var i = 0; i < activeBags.length; i++) {
+    var b = activeBags[i];
+    var marker = L.marker([b.lat, b.lng]).addTo(map).bindPopup("<b>" + b.groupName + "</b><br>" + b.qty + " pokar<br>" + b.loc);
+    markers.push(marker);
+  }
+}
+
+function markBagPickedUp(id) {
+  if (!confirm('Ertu viss um að búið sé að sækja þessa poka?')) return;
+  var theBag = null;
+  for (var i = 0; i < bags.length; i++) {
+    if (bags[i].id === id) { bags[i].pickedUp = 'Já'; theBag = bags[i]; break; }
+  }
+  if (theBag) {
+    renderBags(); notify('Poki merktur sem sóttur!');
+    apiCall('upsertRow', {sheet: 'bags', row: theBag}, function() { loadAll(); });
+  }
+}
+
+function openRouteMap() {
+  var today = todayISO(), coords = [];
+  for (var i = 0; i < bags.length; i++) {
+    if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
+      coords.push(bags[i].lat + ',' + bags[i].lng);
+    }
+  }
+  if (coords.length === 0) { notify('Engir pokar bíða sóttar'); return; }
+  window.open('https://www.google.com/maps/dir/' + coords.join('/'), '_blank');
+}
+
+// --- ADMIN / STJÓRNENDUR ---
+function renderAdminOverview() {
+  var dateInput = document.getElementById('overviewDate');
+  var selectedDate = dateInput.value || todayISO();
+  dateInput.value = selectedDate;
+
+  var totalGroups = 0, diariesDone = 0, totalMissingTools = 0, listHtml = '';
+
+  for (var i = 0; i < groups.length; i++) {
+    var g = groups[i];
+    var safeName = g.name.trim().toLowerCase();
+    
+    if (safeName === 'jokers' || safeName === 'ego' || safeName.includes('yfirflokkstjór')) continue;
+    
+    totalGroups++;
+    var hasDiary = false;
+    for (var d = 0; d < diary.length; d++) {
+      var dDate = String(diary[d].date || diary[d].dateStr || '').split('T')[0];
+      if (dDate === selectedDate && String(diary[d].gid) === String(g.id)) { hasDiary = true; break; }
+    }
+    if (hasDiary) diariesDone++;
+
+    var toolsTaken = false, missingToolsInGroup = 0;
+    for (var t = 0; t < tools.length; t++) {
+      var tDate = String(tools[t].date || tools[t].dateStr || '').split('T')[0];
+      if (tDate === selectedDate && String(tools[t].gid) === String(g.id)) {
+        toolsTaken = true;
+        var m = parseInt(tools[t].taken) - parseInt(tools[t].returned);
+        if (m > 0) missingToolsInGroup += m;
+      }
+    }
+    totalMissingTools += missingToolsInGroup;
+
+    listHtml += '<div class="group-list-item" style="padding: 12px; align-items: flex-start;">';
+    listHtml += '<div style="flex:1; min-width: 140px;"><div style="font-size:14px; font-weight:700;">' + g.name + '</div></div>';
+    var diaryBadge = hasDiary ? '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Dagbók skráð</span>' : '<span style="color:var(--red); font-size:12px; font-weight:600;">❌ Vantar dagbók</span>';
+    var toolBadge = '';
+    if (!toolsTaken) { toolBadge = '<span style="color:var(--text-3); font-size:12px; font-weight:600;">Engin verkfæri tekin</span>'; } 
+    else if (missingToolsInGroup > 0) { toolBadge = '<span style="color:var(--red); font-size:12px; font-weight:600;">⚠️ Vantar ' + missingToolsInGroup + ' verkfæri</span>'; } 
+    else { toolBadge = '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Verkfærum skilað</span>'; }
+
+    listHtml += '<div style="display:flex; flex-direction:column; gap:4px; text-align:right;">' + diaryBadge + toolBadge + '</div></div>';
+  }
+
+  var statsHtml = '<div class="stat-card"><div class="stat-num" style="' + ((diariesDone === totalGroups && totalGroups > 0) ? 'color:var(--green);' : '') + '">' + diariesDone + ' / ' + totalGroups + '</div><div class="stat-lbl">Dagbækur skráðar</div></div>';
+  statsHtml += '<div class="stat-card"><div class="stat-num" style="' + (totalMissingTools > 0 ? 'color:var(--red);' : 'color:var(--green);') + '">' + totalMissingTools + '</div><div class="stat-lbl">Verkfæri óskilað</div></div>';
+
+  document.getElementById('overviewStats').innerHTML = statsHtml;
+  document.getElementById('overviewGroups').innerHTML = (totalGroups === 0) ? '<p style="font-size:13px;color:var(--text-2)">Engir vinnuhópar skráðir í kerfið (eða bara stjórnendahópar).</p>' : listHtml;
+}
+
+function renderAdminGroups() {
+  var html = '<div class="filter-row"><h3>Flokkar (' + groups.length + ')</h3></div>';
+  if (!groups.length) { html += '<p style="font-size:13px;color:var(--text-2)">Engir flokkar.</p>'; }
+  else for (var i = 0; i < groups.length; i++) {
+    var g = groups[i];
+    var t = getTask(g.taskId);
+    
+    var availableTasks = [];
+    for (var j = 0; j < tasks.length; j++) {
+      var isComp = (tasks[j].completed === 'Já' || tasks[j].completed === true);
+      var isCurrent = (String(tasks[j].id) === String(g.taskId));
+      if (!isComp || isCurrent) { availableTasks.push(tasks[j]); }
+    }
+    
+    availableTasks.sort(function(a, b) {
+      if (a.diff !== b.diff) return a.diff - b.diff;
+      var nameA = a.name ? a.name.toLowerCase() : '';
+      var nameB = b.name ? b.name.toLowerCase() : '';
+      return nameA.localeCompare(nameB, 'is');
+    });
+
+    var opts = '<option value="">-- velja verkefni --</option>';
+    for (var k = 0; k < availableTasks.length; k++) {
+       var tk = availableTasks[k];
+       var selected = (String(tk.id) === String(g.taskId)) ? 'selected' : '';
+       opts += '<option value="' + tk.id + '" ' + selected + '>' + tk.name + ' (Stig ' + tk.diff + ')</option>';
+    }
+    
+    html += '<div class="group-list-item">';
+    html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+    html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
+    html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
+    html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
+    html += '<button class="del-btn" onclick="deleteGroup(\'' + g.id + '\')">&#215;</button>';
+    html += '</div></div>';
+  }
+  document.getElementById('adminGroupList').innerHTML = html;
+}
+
+function startEditGroup(gid) {
+  for (var i = 0; i < groups.length; i++) {
+    if (groups[i].id === gid) {
+      editingGroupId = gid;
+      document.getElementById('groupName').value = groups[i].name;
+      document.getElementById('groupExp').value = groups[i].exp;
+      document.getElementById('groupFormTitle').textContent = 'Breyta flokki';
+      document.getElementById('groupSaveBtn').textContent = 'Vista breytingar';
+      document.getElementById('groupCancelBtn').style.display = '';
+      document.getElementById('groupFormCard').scrollIntoView({behavior:'smooth'});
+      document.getElementById('groupZone').value = groups[i].zone || '1';
+      break;
+    }
+  }
+}
+
+function cancelGroupEdit() {
+  editingGroupId = null;
+  document.getElementById('groupName').value = '';
+  document.getElementById('groupExp').value = '2';
+  document.getElementById('groupFormTitle').textContent = 'Bæta við flokki';
+  document.getElementById('groupSaveBtn').textContent = 'Bæta við flokki';
+  document.getElementById('groupCancelBtn').style.display = 'none';
+  document.getElementById('groupZone').value = '1';
+}
+
+function saveGroup() {
+  var zone = document.getElementById('groupZone').value;
+  var name = document.getElementById('groupName').value.trim();
+  if (!name) { notify('Vantar nafn flokks'); return; }
+  var exp = parseInt(document.getElementById('groupExp').value);
+  var theGroup = null;
+
+  if (editingGroupId) {
+    for (var i = 0; i < groups.length; i++) {
+      if (groups[i].id === editingGroupId) {
+        var oldName = groups[i].name;
+        groups[i].name = name; groups[i].zone = zone; groups[i].exp = exp;
+        theGroup = groups[i];
+        logHistory('edit_group', '"' + oldName + '" -> "' + name + '"', '', '', theGroup.id, name);
+        break;
+      }
+    }
+    notify('Flokkur uppfærður');
+  } else {
+    theGroup = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
+    groups.push(theGroup);
+    logHistory('create_group', '"' + name + '"', '', '', theGroup.id, name);
+    notify('Flokki bætt við');
+  }
+  
+  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
+  cancelGroupEdit(); renderAdminGroups(); renderPublic();
+}
+
+function deleteGroup(gid) {
+  var g = null;
+  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
+  if (!confirm('Eyða flokki "' + (g ? g.name : '') + '"?')) return;
+  
+  logHistory('delete_group', '"' + (g ? g.name : '') + '"', '', '', gid, g ? g.name : '');
+  groups = groups.filter(function(x) { return x.id !== gid; });
+  apiCall('deleteRow', {sheet: 'groups', id: gid}, function() {});
+  renderAdminGroups(); renderPublic(); notify('Flokki eytt');
+}
+
+function setExp(gid, exp) {
+  var theGroup = null;
+  for (var i = 0; i < groups.length; i++) {
+    if (groups[i].id === gid) {
+      groups[i].exp = exp; theGroup = groups[i];
+      logHistory('edit_group', groups[i].name + ' uppfærði reynslu', '', '', gid, groups[i].name);
+      break;
+    }
+  }
+  if(theGroup) apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
+  renderAdminGroups();
+}
+
+function assignTask(gid, tid) {
+  var g = null;
+  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
+  if (!g) return;
+  var taskName = '';
+  var t = getTask(tid);
+  if (t) taskName = t.name;
+  if (tid) logHistory('assigned', 'Stjórnandi úthlutaði verkefni', tid, taskName, gid, g.name);
+  
+  g.taskId = tid || '';
+  apiCall('assignTaskSingle', {gid: gid, tid: (tid || '')}, function() {});
+  
+  renderAdminGroups(); renderTaskList(); renderPublic(); notify('Verkefni úthlutað');
+}
 
 function startEditTask(tid) {
   var t = getTask(tid);
@@ -1255,387 +1405,6 @@ function cancelTaskEdit() {
   document.getElementById('taskCancelBtn').style.display = 'none';
 }
 
-function renderAdminOverview() {
-  var dateInput = document.getElementById('overviewDate');
-  var selectedDate = dateInput.value;
-  
-  if (!selectedDate) {
-    selectedDate = todayISO();
-    dateInput.value = selectedDate;
-  }
-
-  // Breyting: Byrjum á 0 í stað þess að taka groups.length
-  var totalGroups = 0; 
-  var diariesDone = 0;
-  var totalMissingTools = 0;
-
-  var listHtml = '';
-
-  for (var i = 0; i < groups.length; i++) {
-    var g = groups[i];
-    var safeName = g.name.trim().toLowerCase();
-    
-    // NÝTT: Sleppum Jokers, EGO og Yfirflokkstjórum úr Yfirlitinu!
-    if (safeName === 'jokers' || safeName === 'ego' || safeName.includes('yfirflokkstjór')) {
-      continue; // Hoppar yfir þennan hóp og fer í næsta
-    }
-    
-    // Teljum hópinn (því hann er venjulegur hópur)
-    totalGroups++;
-
-    var hasDiary = false;
-    for (var d = 0; d < diary.length; d++) {
-      var dDate = (diary[d].date || diary[d].dateStr || '').split('T')[0];
-      if (dDate === selectedDate && String(diary[d].gid) === String(g.id)) {
-        hasDiary = true;
-        break;
-      }
-    }
-    if (hasDiary) diariesDone++;
-
-    var toolsTaken = false;
-    var missingToolsInGroup = 0;
-    
-    for (var t = 0; t < tools.length; t++) {
-      var tDate = (tools[t].date || tools[t].dateStr || '').split('T')[0];
-      if (tDate === selectedDate && String(tools[t].gid) === String(g.id)) {
-        toolsTaken = true;
-        var m = parseInt(tools[t].taken) - parseInt(tools[t].returned);
-        if (m > 0) missingToolsInGroup += m;
-      }
-    }
-    totalMissingTools += missingToolsInGroup;
-
-    listHtml += '<div class="group-list-item" style="padding: 12px; align-items: flex-start;">';
-    listHtml += '<div style="flex:1; min-width: 140px;">';
-    listHtml += '<div style="font-size:14px; font-weight:700;">' + g.name + '</div>';
-    listHtml += '</div>';
-
-    var diaryBadge = hasDiary 
-      ? '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Dagbók skráð</span>' 
-      : '<span style="color:var(--red); font-size:12px; font-weight:600;">❌ Vantar dagbók</span>';
-      
-    var toolBadge = '';
-    if (!toolsTaken) {
-      toolBadge = '<span style="color:var(--text-3); font-size:12px; font-weight:600;">Engin verkfæri tekin</span>';
-    } else if (missingToolsInGroup > 0) {
-      toolBadge = '<span style="color:var(--red); font-size:12px; font-weight:600;">⚠️ Vantar ' + missingToolsInGroup + ' verkfæri</span>';
-    } else {
-      toolBadge = '<span style="color:var(--green); font-size:12px; font-weight:600;">✔️ Verkfærum skilað</span>';
-    }
-
-    listHtml += '<div style="display:flex; flex-direction:column; gap:4px; text-align:right;">';
-    listHtml += diaryBadge;
-    listHtml += toolBadge;
-    listHtml += '</div>';
-    listHtml += '</div>';
-  }
-
-  var statsHtml = '';
-  
-  statsHtml += '<div class="stat-card">';
-  // Grænt ef allir "venjulegu" hóparnir eru búnir að skila!
-  statsHtml += '<div class="stat-num" style="' + ((diariesDone === totalGroups && totalGroups > 0) ? 'color:var(--green);' : '') + '">' + diariesDone + ' / ' + totalGroups + '</div>';
-  statsHtml += '<div class="stat-lbl">Dagbækur skráðar</div>';
-  statsHtml += '</div>';
-
-  statsHtml += '<div class="stat-card">';
-  statsHtml += '<div class="stat-num" style="' + (totalMissingTools > 0 ? 'color:var(--red);' : 'color:var(--green);') + '">' + totalMissingTools + '</div>';
-  statsHtml += '<div class="stat-lbl">Verkfæri óskilað</div>';
-  statsHtml += '</div>';
-
-  document.getElementById('overviewStats').innerHTML = statsHtml;
-  
-  if (totalGroups === 0) {
-    document.getElementById('overviewGroups').innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engir vinnuhópar skráðir í kerfið (eða bara stjórnendahópar).</p>';
-  } else {
-    document.getElementById('overviewGroups').innerHTML = listHtml;
-  }
-}
-
-function renderAdminGroups() {
-  var html = '<div class="filter-row"><h3>Flokkar (' + groups.length + ')</h3></div>';
-  if (!groups.length) { html += '<p style="font-size:13px;color:var(--text-2)">Engir flokkar.</p>'; }
-  else for (var i = 0; i < groups.length; i++) {
-    var g = groups[i];
-    var t = getTask(g.taskId);
-    
-    // --- 1. SÍUM OG RÖÐUM VERKEFNUM ---
-    var availableTasks = [];
-    for (var j = 0; j < tasks.length; j++) {
-      var isComp = (tasks[j].completed === 'Já' || tasks[j].completed === true);
-      var isCurrent = (String(tasks[j].id) === String(g.taskId));
-      
-      // Birtum bara verkefnið ef það er ekki klárað (EÐA ef hópurinn er skráður á það núna)
-      if (!isComp || isCurrent) {
-        availableTasks.push(tasks[j]);
-      }
-    }
-    
-    // Röðum fyrst eftir erfiðleikastigi (1, 2, 3) og svo í stafrófsröð
-    availableTasks.sort(function(a, b) {
-      if (a.diff !== b.diff) {
-        return a.diff - b.diff; // Erfiðleikastig
-      }
-      var nameA = a.name ? a.name.toLowerCase() : '';
-      var nameB = b.name ? b.name.toLowerCase() : '';
-      return nameA.localeCompare(nameB, 'is'); // Íslensk stafrófsröð
-    });
-
-    // --- 2. BÚUM TIL FELLILISTANN ---
-    var opts = '<option value="">-- velja verkefni --</option>';
-    for (var k = 0; k < availableTasks.length; k++) {
-       var tk = availableTasks[k];
-       var selected = (String(tk.id) === String(g.taskId)) ? 'selected' : '';
-       // Bættum við "Stig X" svo það sé auðlesnara
-       opts += '<option value="' + tk.id + '" ' + selected + '>' + tk.name + ' (Stig ' + tk.diff + ')</option>';
-    }
-    
-    // --- 3. BIRTUM FLOKKINN ---
-    html += '<div class="group-list-item">';
-    html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
-    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
-    html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
-    html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
-    html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
-    html += '<button class="del-btn" onclick="deleteGroup(\'' + g.id + '\')">&#215;</button>';
-    html += '</div></div>';
-  }
-  document.getElementById('adminGroupList').innerHTML = html;
-}
-
-function startEditGroup(gid) {
-  for (var i = 0; i < groups.length; i++) {
-    if (groups[i].id === gid) {
-      editingGroupId = gid;
-      document.getElementById('groupName').value = groups[i].name;
-      document.getElementById('groupExp').value = groups[i].exp;
-      document.getElementById('groupFormTitle').textContent = 'Breyta flokki';
-      document.getElementById('groupSaveBtn').textContent = 'Vista breytingar';
-      document.getElementById('groupCancelBtn').style.display = '';
-      document.getElementById('groupFormCard').scrollIntoView({behavior:'smooth'});
-      document.getElementById('groupZone').value = groups[i].zone || '1';
-      break;
-    }
-  }
-}
-
-function cancelGroupEdit() {
-  editingGroupId = null;
-  
-  document.getElementById('groupName').value = '';
-  document.getElementById('groupExp').value = '2';
-  document.getElementById('groupFormTitle').textContent = 'Bæta við flokki';
-  document.getElementById('groupSaveBtn').textContent = 'Bæta við flokki';
-  document.getElementById('groupCancelBtn').style.display = 'none';
-  document.getElementById('groupZone').value = '1';
-  
-}
-
-function saveGroup() {
-  var zone = document.getElementById('groupZone').value;
-  var name = document.getElementById('groupName').value.trim();
-  if (!name) { notify('Vantar nafn flokks'); return; }
-  var exp = parseInt(document.getElementById('groupExp').value);
-  var theGroup = null;
-
-  if (editingGroupId) {
-    for (var i = 0; i < groups.length; i++) {
-      if (groups[i].id === editingGroupId) {
-        var oldName = groups[i].name;
-        groups[i].name = name; groups[i].zone = zone; groups[i].exp = exp;
-        theGroup = groups[i];
-        logHistory('edit_group', '"' + oldName + '" -> "' + name + '"', '', '', theGroup.id, name);
-        break;
-      }
-    }
-    notify('Flokkur uppfærður');
-  } else {
-    theGroup = {id: 'g'+Date.now(), name: name, exp: exp, zone: zone, taskId: ''};
-    groups.push(theGroup);
-    logHistory('create_group', '"' + name + '"', '', '', theGroup.id, name);
-    notify('Flokki bætt við');
-  }
-  
-  // Sendum til baka í Sheets í bakgrunni
-  apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
-  
-  // Uppfærum skjáinn strax
-  cancelGroupEdit();
-  renderAdminGroups();
-  renderPublic();
-}
-
-function deleteGroup(gid) {
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
-  if (!confirm('Eyða flokki "' + (g ? g.name : '') + '"?')) return;
-  
-  logHistory('delete_group', '"' + (g ? g.name : '') + '"', '', '', gid, g ? g.name : '');
-  
-  // Henda út úr minninu (vantaði í síðasta kóða!)
-  groups = groups.filter(function(x) { return x.id !== gid; });
-  
-  // Eyða úr Sheets í bakgrunni
-  apiCall('deleteRow', {sheet: 'groups', id: gid}, function() {});
-  
-  // Uppfærum skjáinn strax
-  renderAdminGroups();
-  renderPublic();
-  notify('Flokki eytt');
-}
-
-function setExp(gid, exp) {
-  var theGroup = null;
-  for (var i = 0; i < groups.length; i++) {
-    if (groups[i].id === gid) {
-      groups[i].exp = exp;
-      theGroup = groups[i];
-      logHistory('edit_group', groups[i].name + ' uppfærði reynslu', '', '', gid, groups[i].name);
-      break;
-    }
-  }
-  if(theGroup) apiCall('upsertRow', {sheet: 'groups', row: theGroup}, function() {});
-  renderAdminGroups();
-}
-
-function toggleTaskComplete(tid) {
-  var theTask = null;
-  for (var i = 0; i < tasks.length; i++) {
-    if (tasks[i].id === tid) {
-      if (tasks[i].completed) {
-        tasks[i].completed = ''; tasks[i].completedDate = '';
-      } else {
-        tasks[i].completed = 'Já'; tasks[i].completedDate = todayISO();
-        for (var j = 0; j < groups.length; j++) {
-          if (String(groups[j].taskId) === String(tid)) {
-            groups[j].taskId = '';
-            apiCall('assignTaskSingle', {gid: groups[j].id, tid: ''}, function(){});
-          }
-        }
-      }
-      theTask = tasks[i];
-      break;
-    }
-  }
-  
-  if(theTask) apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
-  
-  // Uppfærum skjáinn strax
-  renderTaskList();
-  renderAdminGroups();
-  renderPublic();
-  notify('Stöðu verkefnis breytt');
-}
-
-function assignTask(gid, tid) {
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === gid) { g = groups[i]; break; } }
-  if (!g) return;
-  var taskName = '';
-  var t = getTask(tid);
-  if (t) taskName = t.name;
-  if (tid) logHistory('assigned', 'Stjórnandi úthlutaði verkefni', tid, taskName, gid, g.name);
-  
-  g.taskId = tid || '';
-  
-  apiCall('assignTaskSingle', {gid: gid, tid: (tid || '')}, function() {});
-  
-  // Uppfærum skjáinn strax
-  renderAdminGroups();
-  renderTaskList();
-  renderPublic();
-  notify('Verkefni úthlutað');
-}
-
-function renderTaskList() {
-  var htmlActive = '';
-  var htmlCompleted = '';
-  var activeCount = 0;
-  var completedCount = 0;
-
-  // --- NÝTT: Búum til afrit af listanum og röðum honum ---
-  var sortedTasks = tasks.slice().sort(function(a, b) {
-    if (a.diff !== b.diff) {
-      return a.diff - b.diff; // Erfiðleikastig fyrst
-    }
-    var nameA = a.name ? a.name.toLowerCase() : '';
-    var nameB = b.name ? b.name.toLowerCase() : '';
-    return nameA.localeCompare(nameB, 'is'); // Íslensk stafrófsröð næst
-  });
-
-  // Notum 'sortedTasks' í staðinn fyrir 'tasks' í lúppunni
-  for (var i = 0; i < sortedTasks.length; i++) {
-    var t = sortedTasks[i];
-    var isCompleted = (t.completed === 'Já' || t.completed === true);
-    
-    // 1. Finnum hvort einhver flokkur sé skráður á þetta verkefni akkúrat núna
-    var assignedGroup = null;
-    for (var j = 0; j < groups.length; j++) {
-      if (String(groups[j].taskId) === String(t.id)) {
-        assignedGroup = groups[j];
-        break;
-      }
-    }
-
-    // 2. Græjum textann og dagsetninguna
-    var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
-    var statusHtml = '';
-    
-    if (isCompleted) {
-      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>';
-    } else if (assignedGroup) {
-      statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
-    } else {
-      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>';
-    }
-    
-    // 3. Byggjum spjaldið fyrir verkefnið
-    var cardHtml = '<div class="task-list-item">';
-    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
-    
-    cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
-    cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
-    cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
-    cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
-    cardHtml += '</div>';
-    
-    var btnText = isCompleted ? 'Opna aftur' : 'Merkja klárað';
-    cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
-    
-    cardHtml += '</div></div>';
-
-    // 4. Setjum spjaldið í réttan bunka (Virk eða Kláruð)
-    if (isCompleted) {
-      htmlCompleted += cardHtml;
-      completedCount++;
-    } else {
-      htmlActive += cardHtml;
-      activeCount++;
-    }
-  }
-
-  var finalHtml = '';
-  
-  // -- BIRTUM VIRKU VERKEFNIN --
-  if (activeCount === 0) {
-    finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni (Öll kláruð!).</p>';
-  } else {
-    finalHtml += htmlActive;
-  }
-  
-  // -- BIRTUM KLÁRUÐU VERKEFNIN --
-  finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
-  
-  if (completedCount === 0) {
-    finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>';
-  } else {
-    finalHtml += htmlCompleted;
-  }
-
-  document.getElementById('taskListAdmin').innerHTML = finalHtml;
-}
-
 function addTask() {
   var zone = document.getElementById('taskZone').value;
   var name = document.getElementById('taskName').value.trim();
@@ -1665,12 +1434,7 @@ function addTask() {
   }
   
   apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
-  
-  // Uppfærum skjáinn strax
-  cancelTaskEdit();
-  renderTaskList();
-  renderAdminGroups(); 
-  renderPublic(); 
+  cancelTaskEdit(); renderTaskList(); renderAdminGroups(); renderPublic(); 
 }
 
 function deleteTask(tid) {
@@ -1678,140 +1442,166 @@ function deleteTask(tid) {
   if (!confirm('Eyða verkefni "' + (t ? t.name : '') + '"?')) return;
   
   logHistory('delete_task', '"' + (t ? t.name : '') + '"', tid, t ? t.name : '', '', '');
-  
-  // Henda út úr minninu
   tasks = tasks.filter(function(x) { return String(x.id) !== String(tid); });
-  // Taka af flokkum ef einhver var með það
   for (var i = 0; i < groups.length; i++) { if (String(groups[i].taskId) === String(tid)) groups[i].taskId = ''; }
   
   apiCall('deleteRow', {sheet: 'tasks', id: tid}, function() {});
+  renderTaskList(); renderAdminGroups(); renderPublic(); notify('Verkefni eytt');
+}
+
+function toggleTaskComplete(tid) {
+  var theTask = null;
+  for (var i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === tid) {
+      if (tasks[i].completed) {
+        tasks[i].completed = ''; tasks[i].completedDate = '';
+      } else {
+        tasks[i].completed = 'Já'; tasks[i].completedDate = todayISO();
+        for (var j = 0; j < groups.length; j++) {
+          if (String(groups[j].taskId) === String(tid)) {
+            groups[j].taskId = '';
+            apiCall('assignTaskSingle', {gid: groups[j].id, tid: ''}, function(){});
+          }
+        }
+      }
+      theTask = tasks[i];
+      break;
+    }
+  }
+  if(theTask) apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
+  renderTaskList(); renderAdminGroups(); renderPublic(); notify('Stöðu verkefnis breytt');
+}
+
+function renderTaskList() {
+  var htmlActive = '', htmlCompleted = '', activeCount = 0, completedCount = 0;
+
+  var sortedTasks = tasks.slice().sort(function(a, b) {
+    if (a.diff !== b.diff) return a.diff - b.diff;
+    var nameA = a.name ? a.name.toLowerCase() : '';
+    var nameB = b.name ? b.name.toLowerCase() : '';
+    return nameA.localeCompare(nameB, 'is'); 
+  });
+
+  for (var i = 0; i < sortedTasks.length; i++) {
+    var t = sortedTasks[i];
+    var isCompleted = (t.completed === 'Já' || t.completed === true);
+    
+    var assignedGroup = null;
+    for (var j = 0; j < groups.length; j++) {
+      if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
+    }
+
+    var cleanCompDate = String(t.completedDate || '').split('T')[0];
+    var statusHtml = '';
+    
+    if (isCompleted) { statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>'; } 
+    else if (assignedGroup) { statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>'; } 
+    else { statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>'; }
+    
+    var cardHtml = '<div class="task-list-item">';
+    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
+    
+    cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
+    cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
+    cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
+    cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
+    cardHtml += '</div>';
+    
+    var btnText = isCompleted ? 'Opna aftur' : 'Merkja klárað';
+    cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
+    cardHtml += '</div></div>';
+
+    if (isCompleted) { htmlCompleted += cardHtml; completedCount++; } 
+    else { htmlActive += cardHtml; activeCount++; }
+  }
+
+  var finalHtml = '';
+  if (activeCount === 0) { finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni (Öll kláruð!).</p>'; } 
+  else { finalHtml += htmlActive; }
   
-  // Uppfærum skjáinn strax
-  renderTaskList();
-  renderAdminGroups();
-  renderPublic();
-  notify('Verkefni eytt');
+  finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
+  if (completedCount === 0) { finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>'; } 
+  else { finalHtml += htmlCompleted; }
+
+  document.getElementById('taskListAdmin').innerHTML = finalHtml;
 }
 
 function renderAdminTools() {
   var sel = document.getElementById('toolsGroupFilter');
   var dateInput = document.getElementById('toolsDateFilter');
-  
   if (sel && sel.options.length <= 1) {
     for (var i = 0; i < groups.length; i++) {
       var o = document.createElement('option');
-      o.value = groups[i].id;
-      o.textContent = groups[i].name;
-      sel.appendChild(o);
+      o.value = groups[i].id; o.textContent = groups[i].name; sel.appendChild(o);
     }
   }
   
-  var groupF = sel ? sel.value : '';
-  var dateF = dateInput ? dateInput.value : ''; 
+  var groupF = sel ? sel.value : '', dateF = dateInput ? dateInput.value : ''; 
   var grouped = {};
   for (var i = 0; i < tools.length; i++) {
-    var rawDate = tools[i].date || tools[i].dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
-    
+    var cleanDate = String(tools[i].date || tools[i].dateStr || '').split('T')[0];
     var matchGroup = !groupF || String(tools[i].gid) === groupF;
     var matchDate = !dateF || cleanDate === dateF;
     
     if (matchGroup && matchDate) {
       var key = cleanDate + '_' + tools[i].gid;
-      if (!grouped[key]) {
-        grouped[key] = {
-          date: cleanDate,
-          groupName: tools[i].group || 'Óþekktur flokkur',
-          items: []
-        };
-      }
+      if (!grouped[key]) { grouped[key] = { date: cleanDate, groupName: tools[i].group || 'Óþekktur flokkur', items: [] }; }
       grouped[key].items.push(tools[i]);
     }
   }
   
   var keys = Object.keys(grouped).sort().reverse(); 
-  
   var html = '';
-  if (!keys.length) {
-    html = '<p style="font-size:13px;color:var(--text-2)">Engin verkfæraskráning fannst miðað við þessa síu.</p>';
-  } else {
+  if (!keys.length) { html = '<p style="font-size:13px;color:var(--text-2)">Engin verkfæraskráning fannst miðað við þessa síu.</p>'; } 
+  else {
     for (var k = 0; k < keys.length; k++) {
       var gData = grouped[keys[k]];
-      html += '<div class="diary-entry">';
-      html += '<div class="diary-group">' + gData.groupName + '</div>';
-      html += '<div class="diary-date" style="margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:6px;">' + gData.date + '</div>';
-      
-      html += '<div style="display:flex; flex-direction:column; gap:8px;">';
-      
+      html += '<div class="diary-entry"><div class="diary-group">' + gData.groupName + '</div><div class="diary-date" style="margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:6px;">' + gData.date + '</div><div style="display:flex; flex-direction:column; gap:8px;">';
       for (var j = 0; j < gData.items.length; j++) {
         var item = gData.items[j];
         var missing = parseInt(item.taken) - parseInt(item.returned);
-        
-        var statusBadge = '';
-        if (missing > 0) {
-          statusBadge = '<span style="color:var(--red); font-size:11px; font-weight:700; float:right;">Vantar ' + missing + '</span>';
-        } else {
-          statusBadge = '<span style="color:var(--green); font-size:11px; font-weight:700; float:right;">Öllu skilað</span>';
-        }
-        
-        html += '<div style="font-size:13px; line-height:1.4;">';
-        html += '<strong>' + item.name + '</strong>: Tekið ' + item.taken + ' / Skilað ' + item.returned;
-        html += statusBadge;
-        html += '</div>';
+        var statusBadge = missing > 0 ? '<span style="color:var(--red); font-size:11px; font-weight:700; float:right;">Vantar ' + missing + '</span>' : '<span style="color:var(--green); font-size:11px; font-weight:700; float:right;">Öllu skilað</span>';
+        html += '<div style="font-size:13px; line-height:1.4;"><strong>' + item.name + '</strong>: Tekið ' + item.taken + ' / Skilað ' + item.returned + statusBadge + '</div>';
       }
-      
       html += '</div></div>';
     }
   }
-  
   document.getElementById('adminToolsList').innerHTML = html;
 }
 
 function renderAdminDiary() {
   var sel = document.getElementById('diaryFilter');
   var dateInput = document.getElementById('diaryDateFilter');
-  
   if (sel && sel.options.length <= 1) {
     for (var i = 0; i < groups.length; i++) {
-      var o = document.createElement('option');
-      o.value = groups[i].id;
-      o.textContent = groups[i].name;
-      sel.appendChild(o);
+      var o = document.createElement('option'); o.value = groups[i].id; o.textContent = groups[i].name; sel.appendChild(o);
     }
   }
   
-  var f = sel ? sel.value : '';
-  var dateF = dateInput ? dateInput.value : ''; 
-
+  var f = sel ? sel.value : '', dateF = dateInput ? dateInput.value : ''; 
   var entries = [];
   for (var i = 0; i < diary.length; i++) {
     var matchGroup = !f || String(diary[i].gid) === f;
-    var rawDate = diary[i].date || diary[i].dateStr || '';
-    var cleanDate = String(rawDate).split('T')[0];
+    var cleanDate = String(diary[i].date || diary[i].dateStr || '').split('T')[0];
     var matchDate = !dateF || cleanDate === dateF;
-    
-    if (matchGroup && matchDate) {
-      entries.push(diary[i]);
-    }
+    if (matchGroup && matchDate) { entries.push(diary[i]); }
   }
   
   entries.reverse(); 
-  
   var html = '';
-  if (!entries.length) html = '<p style="font-size:13px;color:var(--text-2)">Engar færslur fundust miðað við þessa síu.</p>';
-  else for (var i = 0; i < entries.length; i++) {
-    
-    var attHtml = '';
-    if (entries[i].attendance && entries[i].registered) {
-      var pct = Math.round((entries[i].attendance / entries[i].registered) * 100);
-      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + ' / ' + entries[i].registered + ' (' + pct + '%)</span>';
-    } else if (entries[i].attendance) {
-      attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
+  if (!entries.length) { html = '<p style="font-size:13px;color:var(--text-2)">Engar færslur fundust miðað við þessa síu.</p>'; }
+  else {
+    for (var i = 0; i < entries.length; i++) {
+      var attHtml = '';
+      if (entries[i].attendance && entries[i].registered) {
+        var pct = Math.round((entries[i].attendance / entries[i].registered) * 100);
+        attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + ' / ' + entries[i].registered + ' (' + pct + '%)</span>';
+      } else if (entries[i].attendance) {
+        attHtml = '<span class="badge" style="float:right;">Mæting: ' + entries[i].attendance + '</span>';
+      }
+      var cleanDate2 = String(entries[i].dateStr || entries[i].date || '').split('T')[0];
+      html += '<div class="diary-entry"><div class="diary-group">' + (entries[i].group||'') + '</div><div class="diary-date">' + cleanDate2 + attHtml + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
     }
-    var rawDate2 = entries[i].dateStr || entries[i].date || '';
-    var cleanDate2 = String(rawDate2).split('T')[0];
-    
-    html += '<div class="diary-entry"><div class="diary-group">' + (entries[i].group||'') + '</div><div class="diary-date">' + cleanDate2 + attHtml + '</div><div class="diary-text">' + entries[i].text + '</div></div>';
   }
   document.getElementById('adminDiaryList').innerHTML = html;
 }
@@ -1831,31 +1621,21 @@ var TYPE_META = {
 
 function weekBucket(iso) {
   var d = Math.floor((new Date() - new Date(iso)) / 86400000);
-  if (d < 1) return 'Í dag';
-  if (d < 2) return 'Í gær';
-  if (d < 7) return 'Síðustu 7 dagar';
-  if (d < 14) return 'Síðustu 2 vikur';
-  return 'Eldra';
+  if (d < 1) return 'Í dag'; if (d < 2) return 'Í gær'; if (d < 7) return 'Síðustu 7 dagar'; if (d < 14) return 'Síðustu 2 vikur'; return 'Eldra';
 }
 
 function renderAdminHistory() {
-  var uSel = document.getElementById('histUserFilter');
-  var tSel = document.getElementById('histTypeFilter');
+  var uSel = document.getElementById('histUserFilter'), tSel = document.getElementById('histTypeFilter');
   if (uSel && uSel.options.length <= 1) {
     var seen = {};
     for (var i = 0; i < appHistory.length; i++) {
       var u = appHistory[i].user;
       if (u && !seen[u]) {
-        seen[u] = true;
-        var o = document.createElement('option');
-        o.value = u;
-        o.textContent = appHistory[i].displayName || u;
-        uSel.appendChild(o);
+        seen[u] = true; var o = document.createElement('option'); o.value = u; o.textContent = appHistory[i].displayName || u; uSel.appendChild(o);
       }
     }
   }
-  var uf = uSel ? uSel.value : '';
-  var tf = tSel ? tSel.value : '';
+  var uf = uSel ? uSel.value : '', tf = tSel ? tSel.value : '';
   var filtered = [];
   for (var i = 0; i < appHistory.length; i++) {
     if (uf && appHistory[i].user !== uf) continue;
@@ -1863,35 +1643,30 @@ function renderAdminHistory() {
     filtered.push(appHistory[i]);
   }
   filtered.sort(function(a,b) {
-    var ta = a.timestamp || a.dateStr || a.date || '';
-    var tb = b.timestamp || b.dateStr || b.date || '';
+    var ta = String(a.timestamp || a.dateStr || a.date || ''), tb = String(b.timestamp || b.dateStr || b.date || '');
     return tb.localeCompare(ta);
   });
+  
   if (!filtered.length) { document.getElementById('adminHistoryList').innerHTML = '<p style="font-size:13px;color:var(--text-2)">Engar skráningar.</p>'; return; }
-  var buckets = {};
-  var order = [];
+  
+  var buckets = {}, order = [];
   for (var i = 0; i < filtered.length; i++) {
     var b = weekBucket(filtered[i].date || '');
     if (!buckets[b]) { buckets[b] = []; order.push(b); }
     buckets[b].push(filtered[i]);
   }
+  
   var html = '';
   for (var bi = 0; bi < order.length; bi++) {
-    var lbl = order[bi];
-    var items = buckets[lbl];
+    var lbl = order[bi], items = buckets[lbl];
     html += '<div class="week-hdr">' + lbl + '</div>';
     for (var i = 0; i < items.length; i++) {
-      var e = items[i];
-      var m = TYPE_META[e.type] || {icon:'&#128203;',label:e.type||'',cls:''};
+      var e = items[i], m = TYPE_META[e.type] || {icon:'&#128203;',label:e.type||'',cls:''};
       var actionLabel = m.label + (e.taskName ? ': ' + e.taskName : '');
-      html += '<div class="hist-entry ' + m.cls + '">';
-      html += '<div class="hist-icon">' + m.icon + '</div>';
-      html += '<div style="flex:1"><div class="hist-action">' + actionLabel + '</div>';
-      html += '<div class="hist-meta">';
+      html += '<div class="hist-entry ' + m.cls + '"><div class="hist-icon">' + m.icon + '</div><div style="flex:1"><div class="hist-action">' + actionLabel + '</div><div class="hist-meta">';
       if (e.displayName) html += '<span class="hist-user">' + e.displayName + '</span>';
       if (e.group) html += '<span>' + e.group + '</span>';
-      html += '<span>' + (e.timestamp || e.dateStr || e.date || '') + '</span>';
-      html += '</div>';
+      html += '<span>' + (e.timestamp || e.dateStr || e.date || '') + '</span></div>';
       if (e.text && e.type !== 'assigned' && e.type !== 'completed') html += '<div class="hist-detail">' + e.text + '</div>';
       html += '</div></div>';
     }
@@ -1899,215 +1674,7 @@ function renderAdminHistory() {
   document.getElementById('adminHistoryList').innerHTML = html;
 }
 
-function notify(msg) {
-  var n = document.getElementById('notif');
-  n.textContent = msg;
-  n.classList.add('show');
-  setTimeout(function() { n.classList.remove('show'); }, 2500);
-}
-
-function showPublic(p) {
-  document.getElementById('pub-dagskra').classList.remove('active');
-  document.getElementById('pub-pokar').classList.remove('active');
-  document.getElementById(p).classList.add('active');
-  
-  var btns = document.querySelectorAll('#section-public .inner-nav button');
-  btns[0].classList.toggle('active', p === 'pub-dagskra');
-  btns[1].classList.toggle('active', p === 'pub-pokar');
-
-  if (p === 'pub-pokar') {
-    renderBags();
-    // Reikna stærð kortsins aðeins eftir að flipinn opnast
-    if(map) { setTimeout(function() { map.invalidateSize(); }, 50); }
-  }
-}
-
-// --- KORT TIL AÐ TILKYNNA POKA (Flokkstjórar) ---
-var reportMap = null;
-var reportMarker = null;
-
-function initReportMap() {
-  if (!reportMap) {
-    reportMap = L.map('reportMap').setView([64.0886, -21.9066], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(reportMap);
-    
-    // Setjum pinna sem hægt er að færa til
-    reportMarker = L.marker([64.0886, -21.9066], {draggable: true}).addTo(reportMap);
-
-    // Uppfæra hnitin ef pinninn er dreginn
-    reportMarker.on('dragend', function(e) {
-      var pos = e.target.getLatLng();
-      document.getElementById('bagLat').value = pos.lat;
-      document.getElementById('bagLng').value = pos.lng;
-      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
-    });
-
-    // Uppfæra hnitin ef smellt er á kortið
-    reportMap.on('click', function(e) {
-      reportMarker.setLatLng(e.latlng);
-      document.getElementById('bagLat').value = e.latlng.lat;
-      document.getElementById('bagLng').value = e.latlng.lng;
-      document.getElementById('gpsStatus').textContent = '📍 Valdi af korti';
-    });
-  }
-  setTimeout(function() { reportMap.invalidateSize(); }, 200);
-}
-
-function getGPS() {
-  var btn = document.getElementById('gpsStatus');
-  btn.textContent = 'Leita...';
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(pos) {
-      document.getElementById('bagLat').value = pos.coords.latitude;
-      document.getElementById('bagLng').value = pos.coords.longitude;
-      btn.textContent = '✔️ GPS Hnit fundin';
-      
-      // Færum kortið og pinnann á réttan stað
-      if (reportMap && reportMarker) {
-        reportMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-        reportMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
-      }
-    }, function(err) {
-      btn.textContent = '❌ Tókst ekki';
-      notify('Gat ekki fundið staðsetningu. Er kveikt á GPS?');
-    });
-  } else { notify('Vafrinn styður ekki GPS'); }
-}
-
-function saveBags() {
-  var qty = document.getElementById('bagQty').value;
-  var loc = document.getElementById('bagLoc').value.trim();
-  
-  // Ef ekkert var valið, tökum við hnitin sem pinninn er á
-  var lat = document.getElementById('bagLat').value || (reportMarker ? reportMarker.getLatLng().lat : '');
-  var lng = document.getElementById('bagLng').value || (reportMarker ? reportMarker.getLatLng().lng : '');
-
-  if (!lat || !lng) { notify('Vinsamlegast veldu staðsetningu á kortinu'); return; }
-
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
-
-  var btn = document.getElementById('bagSaveBtn');
-  var origText = btn.textContent;
-  btn.textContent = 'Vistar...'; btn.disabled = true;
-
-  var theBag = {
-    id: 'b' + Date.now(), gid: currentUser.gid, groupName: g ? g.name : '',
-    date: todayISO(), qty: qty, loc: loc, lat: lat, lng: lng, pickedUp: '' // NÝTT: Sótt dálkurinn
-  };
-
-  apiCall('upsertRow', {sheet: 'bags', row: theBag}, function(res) {
-    btn.textContent = origText; btn.disabled = false;
-    if(res.error) { notify('Villa: ' + res.error); return; }
-    
-    notify('Pokar skráðir!');
-    bags.push(theBag);
-    
-    document.getElementById('bagLoc').value = '';
-    document.getElementById('gpsStatus').textContent = '📍 Sækja GPS hnit';
-    renderMyBags();
-  });
-}
-
-function renderMyBags() {
-  var html = '';
-  var today = todayISO();
-  for (var i = 0; i < bags.length; i++) {
-    if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
-      var isPicked = (bags[i].pickedUp === 'Já');
-      var statusTag = isPicked ? '<span class="status-ok">✔️ Búið að sækja</span>' : '<span style="color:var(--text-3);font-size:11px;font-weight:700;">Poki bíður</span>';
-      
-      html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].qty + ' pokar</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
-      html += '<div>' + statusTag + '</div>';
-      html += '</div>';
-    }
-  }
-  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar skráðir í dag.</p>';
-  document.getElementById('myBagsList').innerHTML = html;
-}
-
-// --- TEIKNA KORTIÐ OG LISTANN FYRIR BÍLSTJÓRA (Forsíðan) ---
-var map = null;
-var markers = [];
-
-function renderBags() {
-  var html = '';
-  var activeBags = [];
-  var today = todayISO();
-  
-  for (var i = 0; i < bags.length; i++) {
-    // Sýnum bara poka sem EKKI er búið að sækja
-    if (String(bags[i].date).includes(today) && bags[i].pickedUp !== 'Já') {
-      activeBags.push(bags[i]);
-      html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].groupName + ' (' + bags[i].qty + ' pokar)</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
-      html += '<div style="display:flex;gap:6px;">';
-      html += '<a class="btn-outline" href="https://maps.google.com/?q=' + bags[i].lat + ',' + bags[i].lng + '" target="_blank" style="padding:4px 8px; font-size:11px;">Kort</a>';
-      html += '<button class="btn-outline" onclick="markBagPickedUp(\'' + bags[i].id + '\')" style="padding:4px 8px; font-size:11px; border-color:var(--green); color:var(--green)">✔️ Sótt</button>';
-      html += '</div></div>';
-    }
-  }
-  
-  if(!html) html = '<p style="font-size:13px;color:var(--text-2)">Engir pokar bíða þess að vera sóttir.</p>';
-  document.getElementById('publicBagsList').innerHTML = html;
-
-  if (!map) {
-    map = L.map('bagsMap').setView([64.0886, -21.9066], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  }
-  
-  setTimeout(function() { map.invalidateSize(); }, 200);
-
-  for(var i=0; i<markers.length; i++) { map.removeLayer(markers[i]); }
-  markers = [];
-
-  for (var i = 0; i < activeBags.length; i++) {
-    var b = activeBags[i];
-    var marker = L.marker([b.lat, b.lng]).addTo(map)
-      .bindPopup("<b>" + b.groupName + "</b><br>" + b.qty + " pokar<br>" + b.loc);
-    markers.push(marker);
-  }
-}
-
-// NÝTT: Fall til að merkja poka sóttan!
-function markBagPickedUp(id) {
-  if (!confirm('Ertu viss um að búið sé að sækja þessa poka?')) return;
-  var theBag = null;
-  for (var i = 0; i < bags.length; i++) {
-    if (bags[i].id === id) {
-      bags[i].pickedUp = 'Já';
-      theBag = bags[i];
-      break;
-    }
-  }
-  
-  if (theBag) {
-    // Teikna listann um leið svo pokinn hverfi af skjánum strax
-    renderBags(); 
-    notify('Poki merktur sem sóttur!');
-    // Senda uppfærsluna til Sheets í bakgrunni
-    apiCall('upsertRow', {sheet: 'bags', row: theBag}, function() { loadAll(); });
-  }
-}
-
-function openRouteMap() {
-  var today = todayISO();
-  var coords = [];
-  
-  for (var i = 0; i < bags.length; i++) {
-    // Setur bara ÓSÓTTA poka í leiðarvísinn
-    if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
-      coords.push(bags[i].lat + ',' + bags[i].lng);
-    }
-  }
-  
-  if (coords.length === 0) { notify('Engir pokar bíða'); return; }
-  var url = 'https://www.google.com/maps/dir/' + coords.join('/');
-  window.open(url, '_blank');
-}
-
-
+// --- INITIALIZATION ---
 document.getElementById('todayDate').textContent = getIcelandicDate(new Date());
 restoreSession();
 loadAll();
