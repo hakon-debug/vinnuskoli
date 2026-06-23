@@ -1166,7 +1166,7 @@ function markBagPickedUp(id) {
   for (var i = 0; i < bags.length; i++) {
     if (bags[i].id === id) { 
       bags[i].pickedUp = 'Já'; 
-      bags[i].pickedUpBy = currentUser.displayName; // Skráir hver sótti!
+      bags[i].pickedUpBy = currentUser.displayName;
       theBag = bags[i]; 
       break; 
     }
@@ -1185,15 +1185,40 @@ function markBagPickedUp(id) {
 
 function openRouteMap() {
   var today = todayISO();
-  var coords = ['Current+Location']; // Hnitin byrja á eigin staðsetningu
+  var bagCoords = [];
   
   for (var i = 0; i < bags.length; i++) {
     if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
-      coords.push(bags[i].lat + ',' + bags[i].lng);
+      bagCoords.push(bags[i].lat + ',' + bags[i].lng);
     }
   }
-  if (coords.length === 1) { notify('Engir pokar bíða sóttar'); return; }
-  window.open('https://www.google.com/maps/dir/' + coords.join('/'), '_blank');
+  
+  if (bagCoords.length === 0) { 
+    notify('Engir pokar bíða sóttar'); 
+    return; 
+  }
+
+  notify('Sæki þína staðsetningu...');
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var myLat = position.coords.latitude;
+      var myLng = position.coords.longitude;
+      
+      var url = 'https://www.google.com/maps/dir/' + myLat + ',' + myLng + '/' + bagCoords.join('/');
+      window.open(url, '_blank');
+      
+    }, function(error) {
+      console.warn('GPS villa, nota Current+Location í staðinn:', error);
+      var url = 'https://www.google.com/maps/dir/Current+Location/' + bagCoords.join('/');
+      window.open(url, '_blank');
+    }, {
+      enableHighAccuracy: true 
+    });
+  } else {
+    var url = 'https://www.google.com/maps/dir/Current+Location/' + bagCoords.join('/');
+    window.open(url, '_blank');
+  }
 }
 
 // --- ADMIN / STJÓRNENDUR ---
