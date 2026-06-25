@@ -376,7 +376,6 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
         <button class="btn-outline" id="taskCancelBtn" onclick="cancelTaskEdit()" style="display:none">Hætta við</button>
       </div>
     </div>
-    <div class="filter-row"><h3>Verkefnalisti</h3></div>
     <div id="taskListAdmin"></div>
   </div>
   
@@ -1588,55 +1587,87 @@ function toggleTaskComplete(tid) {
 }
 
 function renderTaskList() {
-  var htmlActive = '', htmlCompleted = '', activeCount = 0, completedCount = 0;
+  var htmlActive = '';
+  var htmlCompleted = '';
+  var activeCount = 0;
+  var completedCount = 0;
 
+  // --- 1. RÖÐUN ---
   var sortedTasks = tasks.slice().sort(function(a, b) {
-    if (a.diff !== b.diff) return a.diff - b.diff;
-    var nameA = a.name ? a.name.toLowerCase() : '';
-    var nameB = b.name ? b.name.toLowerCase() : '';
-    return nameA.localeCompare(nameB, 'is'); 
+    var diffA = parseInt(a.diff) || 0;
+    var diffB = parseInt(b.diff) || 0;
+    var valA = (diffA === 0) ? 99 : diffA;
+    var valB = (diffB === 0) ? 99 : diffB;
+    if (valA !== valB) return valA - valB;
+    return (a.name || '').localeCompare(b.name || '', 'is');
   });
 
   for (var i = 0; i < sortedTasks.length; i++) {
     var t = sortedTasks[i];
     var isCompleted = (t.completed === 'Já' || t.completed === true);
     
+    // Finnum flokk
     var assignedGroup = null;
     for (var j = 0; j < groups.length; j++) {
-      if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
+      if (String(groups[j].taskId) === String(t.id)) {
+        assignedGroup = groups[j];
+        break;
+      }
     }
 
-    var cleanCompDate = String(t.completedDate || '').split('T')[0];
+    var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
     var statusHtml = '';
     
-    if (isCompleted) { statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>'; } 
-    else if (assignedGroup) { statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>'; } 
-    else { statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>'; }
+    if (isCompleted) {
+      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>';
+    } else if (assignedGroup) {
+      statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
+    } else {
+      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>';
+    }
     
+    // Byggjum spjaldið
+    var diffLabel = (parseInt(t.diff) > 0) ? 'Stig ' + t.diff : '*';
     var cardHtml = '<div class="task-list-item">';
-    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + (DIFFS[t.diff]||'') + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
-    
+    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + diffLabel + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
     cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
     cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
     cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
     cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
     cardHtml += '</div>';
-    
     var btnText = isCompleted ? 'Opna aftur' : 'Merkja klárað';
     cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
     cardHtml += '</div></div>';
 
-    if (isCompleted) { htmlCompleted += cardHtml; completedCount++; } 
-    else { htmlActive += cardHtml; activeCount++; }
+    if (isCompleted) {
+      htmlCompleted += cardHtml;
+      completedCount++;
+    } else {
+      htmlActive += cardHtml;
+      activeCount++;
+    }
   }
 
+  // --- 2. SAMSETNING Á LOKA-HTML ---
   var finalHtml = '';
-  if (activeCount === 0) { finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni (Öll kláruð!).</p>'; } 
-  else { finalHtml += htmlActive; }
   
+  // Fyrirsögn fyrir virk verkefni með fjölda
+  finalHtml += '<div class="filter-row"><h3>Virk verkefni (' + activeCount + ')</h3></div>';
+  
+  if (activeCount === 0) {
+    finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni.</p>';
+  } else {
+    finalHtml += htmlActive;
+  }
+  
+  // Fyrirsögn fyrir kláruð verkefni
   finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
-  if (completedCount === 0) { finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>'; } 
-  else { finalHtml += htmlCompleted; }
+  
+  if (completedCount === 0) {
+    finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>';
+  } else {
+    finalHtml += htmlCompleted;
+  }
 
   document.getElementById('taskListAdmin').innerHTML = finalHtml;
 }
