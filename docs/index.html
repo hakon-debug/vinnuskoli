@@ -284,7 +284,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
         </div>
       </div>
       <div class="form-group">
-        <label>Lýsing á staðsetningu (Valfrjálst)</label>
+        <label>Lýsing á staðsetningu</label>
         <input type="text" id="bagLoc" placeholder="t.d. Við bláa bekkinn á göngustígnum" />
       </div>
       <input type="hidden" id="bagLat" />
@@ -370,7 +370,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
         <div class="form-group"><label>Staðsetning</label><input type="text" id="taskLoc" placeholder="t.d. Lundaból"/></div>
       </div>
       <div class="form-group"><label>Lýsing</label><input type="text" id="taskDesc" placeholder="Stutt lýsing..."/></div>
-      <div class="form-group"><label>Google Maps hlekkur (valfrjálst)</label><input type="text" id="taskMap" placeholder="https://maps.app.goo.gl/..."/></div>
+      <div class="form-group"><label>Google Maps hlekkur</label><input type="text" id="taskMap" placeholder="https://maps.app.goo.gl/..."/></div>
       <div style="display:flex;gap:8px">
         <button class="btn-primary" id="taskSaveBtn" onclick="addTask()">Bæta við verkefni</button>
         <button class="btn-outline" id="taskCancelBtn" onclick="cancelTaskEdit()" style="display:none">Hætta við</button>
@@ -1330,30 +1330,54 @@ function renderAdminGroups() {
     var g = groups[i];
     var t = getTask(g.taskId);
     
-    var availableTasks = [];
-    for (var j = 0; j < tasks.length; j++) {
-      var isComp = (tasks[j].completed === 'Já' || tasks[j].completed === true);
-      var isCurrent = (String(tasks[j].id) === String(g.taskId));
-      if (!isComp || isCurrent) { availableTasks.push(tasks[j]); }
-    }
-    
-    availableTasks.sort(function(a, b) {
-      if (a.diff !== b.diff) return a.diff - b.diff;
-      var nameA = a.name ? a.name.toLowerCase() : '';
-      var nameB = b.name ? b.name.toLowerCase() : '';
-      return nameA.localeCompare(nameB, 'is');
+    // --- 1. SÍUM VERKEFNI ÚT FRÁ REYNSLU FLOKKS ---
+    var filteredTasks = tasks.filter(function(tk) {
+      var isComp = (tk.completed === 'Já' || tk.completed === true);
+      var isCurrent = (String(tk.id) === String(g.taskId));
+      
+      // Ef verkefni er klárað, sýnum það bara ef flokkurinn er með það núna
+      if (isComp && !isCurrent) return false;
+
+      var tDiff = parseInt(tk.diff) || 0; // 0 ef það er ekki merkt
+
+      // Sérregla: Ef verkefni er ekki merkt með erfiðleika (Stig 0), sýnum það ÖLLUM
+      if (tDiff === 0) return true;
+
+      // Reynslustýring
+      if (g.exp === 1) return tDiff === 1;           // Byrjendur: Bara Stig 1
+      if (g.exp === 2) return tDiff === 2;           // Miðlungs: Bara Stig 2
+      if (g.exp === 3) return (tDiff === 2 || tDiff === 3); // Reyndir: Stig 2 og 3
+      
+      return false;
     });
 
+    // --- 2. RÖÐUN: Stig 1 -> 2 -> 3 -> Sérverkefni (0) neðst ---
+    filteredTasks.sort(function(a, b) {
+      var aDiff = parseInt(a.diff) || 99; // Setjum 99 svo ómerkt lendi neðst
+      var bDiff = parseInt(b.diff) || 99;
+      
+      if (aDiff !== bDiff) return aDiff - bDiff;
+      return (a.name || '').localeCompare(b.name || '', 'is'); // Stafrófsröð
+    });
+
+    // --- 3. BÚUM TIL FELLILISTANN ---
     var opts = '<option value="">-- velja verkefni --</option>';
-    for (var k = 0; k < availableTasks.length; k++) {
-       var tk = availableTasks[k];
+    for (var k = 0; k < filteredTasks.length; k++) {
+       var tk = filteredTasks[k];
        var selected = (String(tk.id) === String(g.taskId)) ? 'selected' : '';
-       opts += '<option value="' + tk.id + '" ' + selected + '>' + tk.name + ' (Stig ' + tk.diff + ')</option>';
+       var label = tk.name;
+       // Sýnum "Stig X" bara ef það er merkt
+       if (parseInt(tk.diff) > 0) label += ' (Stig ' + tk.diff + ')';
+       else label += ' (Sérverkefni)';
+       
+       opts += '<option value="' + tk.id + '" ' + selected + '>' + label + '</option>';
     }
     
+    // --- 4. BIRTUM FLOKKINN ---
     html += '<div class="group-list-item">';
     html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+    // Ef þú breytir reynslunni hér, uppfærist listinn sjálfkrafa (renderAdminGroups er kallað í setExp)
     html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
     html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
