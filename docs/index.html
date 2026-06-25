@@ -772,7 +772,9 @@ function requestNewTask() {
   
   if (old) {
     logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
-    old.completed = 'Já'; old.completedDate = todayISO();
+    old.completed = 'Já';
+    old.completedDate = todayISO();
+    old.completedBy = g.name; // <--- NÝJA LÍNAN: Skráir nafnið á hópnum sem var með það
     apiCall('upsertRow', {sheet: 'tasks', row: old}, function() {});
   }
   
@@ -1568,15 +1570,21 @@ function toggleTaskComplete(tid) {
   for (var i = 0; i < tasks.length; i++) {
     if (tasks[i].id === tid) {
       if (tasks[i].completed) {
-        tasks[i].completed = ''; tasks[i].completedDate = '';
+        tasks[i].completed = ''; tasks[i].completedDate = ''; tasks[i].completedBy = '';
       } else {
         tasks[i].completed = 'Já'; tasks[i].completedDate = todayISO();
+        
+        // Finnum hvort einhver flokkur sé með þetta verkefni núna og skráum nafnið
+        var assignedGroupName = 'Stjórnandi';
         for (var j = 0; j < groups.length; j++) {
           if (String(groups[j].taskId) === String(tid)) {
+            assignedGroupName = groups[j].name;
             groups[j].taskId = '';
             apiCall('assignTaskSingle', {gid: groups[j].id, tid: ''}, function(){});
+            break;
           }
         }
+        tasks[i].completedBy = assignedGroupName;
       }
       theTask = tasks[i];
       break;
@@ -1619,7 +1627,8 @@ function renderTaskList() {
     var statusHtml = '';
     
     if (isCompleted) {
-      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')</span>';
+      var finisher = t.completedBy ? ' af ' + t.completedBy : '';
+      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')' + finisher + '</span>';
     } else if (assignedGroup) {
       statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
     } else {
