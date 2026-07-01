@@ -194,7 +194,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 .notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;opacity:0;transition:opacity 0.25s;pointer-events:none;z-index:999;box-shadow:var(--shadow-md)}
 .notif.show{opacity:1}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}.groups-grid{grid-template-columns:1fr 1fr}.main{padding:1rem}}
-.page:not(.active) #reportMap, .page:not(.active) #bagsMap { display: none !important; }
+.page:not(.active) #reportMap, .page:not(.active) #bagsMap, .admin-page:not(.active) #adminTaskMap { display: none !important; }
 </style>
 </head>
 <body>
@@ -226,6 +226,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 
 <div class="section" id="section-flokkstjori">
   <div class="inner-nav">
+    <button id="nav-btn-tilbaka" style="display:none; color:var(--red); font-weight:700;" onclick="showSection('admin'); showAdmin('adm-overview');">⬅ Stjórnborð</button>
     <button class="active" onclick="showPage('pg-dash')">Verkefni</button>
     <button onclick="showPage('pg-dagbok')">Dagbók</button>
     <button onclick="showPage('pg-taeki')">Verkfæri</button>
@@ -316,6 +317,8 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
     <button class="admin-tab" onclick="showAdmin('adm-dagbok')">Dagbók</button>
     <button class="admin-tab" onclick="showAdmin('adm-taeki')">Verkfæri</button>
     <button class="admin-tab" onclick="showAdmin('adm-history')">Saga</button>
+    <button class="admin-tab" style="border-color: var(--green); color: var(--green);" onclick="showAdmin('pg-pokar')">Tilkynna poka</button>
+    <button class="admin-tab" style="border-color: var(--green); color: var(--green);" onclick="showAdmin('pg-saekja-poka')">Sækja poka</button>
   </div>
   
   <div class="admin-page active" id="adm-overview">
@@ -334,7 +337,7 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
       <div class="form-row">
         <div class="form-group"><label>Nafn flokks</label><input type="text" id="groupName" placeholder="Nafn"/></div>
         <div class="form-group"><label>Reynslustig</label>
-          <select id="groupExp"><option value="1">Byrjandi</option><option value="2" selected>Miðlungs</option><option value="3">Reyndur</option></select>
+          <select id="groupExp"><option value="1">Byrjandi</option><option value="2" selected>Miðlungs</option><option value="3">Reyndur</option><option value="4">Sérflokkur</option></select>
         </div>
       </div>
       <div class="form-group"><label>Svæði / Hverfi</label>
@@ -365,18 +368,42 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
           </select>
         </div>
         <div class="form-group"><label>Erfiðleikastig</label>
-          <select id="taskDiff"><option value="1">1 - Auðvelt</option><option value="2">2 - Miðlungs</option><option value="3">3 - Erfitt</option></select>
+          <select id="taskDiff">
+            <option value="1">1 - Auðvelt</option>
+            <option value="2">2 - Miðlungs</option>
+            <option value="3">3 - Erfitt</option>
+            <option value="4">4 - Sérverkefni</option>
+          </select>
         </div>
-        <div class="form-group"><label>Staðsetning</label><input type="text" id="taskLoc" placeholder="t.d. Lundaból"/></div>
+        <div class="form-group"><label>Staðsetning (Texti)</label><input type="text" id="taskLoc" placeholder="t.d. Lundaból"/></div>
       </div>
+      
+      <!-- NÝTT: KORTIÐ -->
+      <div class="form-group">
+        <label>Velja nákvæma staðsetningu á korti (Gervihnöttur)</label>
+        <div id="adminTaskMap" style="height: 250px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); margin-bottom: 4px; z-index: 1;"></div>
+        <div style="font-size:11px; font-weight:600; color:var(--text-3);" id="adminMapStatus">Ekkert merkt - Smelltu á kortið til að setja pinna</div>
+        <input type="hidden" id="taskLat" />
+        <input type="hidden" id="taskLng" />
+      </div>
+
       <div class="form-group"><label>Lýsing</label><input type="text" id="taskDesc" placeholder="Stutt lýsing..."/></div>
-      <div class="form-group"><label>Google Maps hlekkur</label><input type="text" id="taskMap" placeholder="https://maps.app.goo.gl/..."/></div>
-      <div style="display:flex;gap:8px">
+      <div class="form-group"><label>Google Maps hlekkur (Útbýst sjálfkrafa ef pinni er settur)</label><input type="text" id="taskMap" placeholder="https://maps.app.goo.gl/..."/></div>
+      
+      <div style="display:flex;gap:8px; margin-top:10px;">
         <button class="btn-primary" id="taskSaveBtn" onclick="addTask()">Bæta við verkefni</button>
         <button class="btn-outline" id="taskCancelBtn" onclick="cancelTaskEdit()" style="display:none">Hætta við</button>
       </div>
     </div>
     <div id="taskListAdmin"></div>
+    <div id="allTasksMapWrap" style="display:none; margin-top: 1rem;">
+      <div style="display:flex; gap: 15px; margin-bottom: 10px; font-size: 13px; font-weight: 600; flex-wrap: wrap;">
+         <span style="color: #2b82cb;">🔵 Óklárað</span>
+         <span style="color: #cb8427;">🟠 Í vinnslu</span>
+         <span style="color: #2aad27;">🟢 Klárað</span>
+      </div>
+      <div id="allTasksMap" style="height: 500px; border-radius: var(--radius); border: 1px solid var(--border-strong); z-index: 1;"></div>
+    </div>
   </div>
   
   <div class="admin-page" id="adm-dagbok">
@@ -433,9 +460,9 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 <script>
 // --- ALMENNAR BREYTUR ---
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
-var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt'};
+var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt', '4':'Sérverkefni'};
 var ZONES = {'1':'Miðsvæðið', '2':'Álftanes', '3':'Urriðaholt'};
-var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur'};
+var EXP   = {'1':'Byrjandi','2':'Miðlungs','3':'Reyndur', '4':'Sérflokkur'};
 var TOOLS = ['Arfasköfur','Hrífur - (stál)','Hrífur - (plast)','Sópar','Skóflur','Stungugafflar','Kantskerar','Fötur','Þríkrókar'];
 
 var currentUser = null;
@@ -444,7 +471,12 @@ var map = null, markers = [];
 var reportMap = null, reportMarker = null;
 var editingTaskId = null;
 var editingGroupId = null;
+var currentTaskTab = 'in-progress'; 
 
+function switchTaskTab(tabId) {
+  currentTaskTab = tabId;
+  renderTaskList(); // Teiknar listann aftur með rétta flipann opinn
+}
 // --- API SAMSΚIPTI ---
 function apiCall(action, params, callback) {
   var formData = new URLSearchParams();
@@ -540,44 +572,160 @@ function showSection(s) {
 }
 
 function showPage(p) {
-  // Sleggjan: Felum ALLAR síður (.page), alveg sama hvar þær eru í HTML-inu
   var pages = document.querySelectorAll('.page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
   
-  // Opnum þá réttu
   var targetPage = document.getElementById(p);
   if (targetPage) targetPage.classList.add('active');
   
+  // Merkja réttan takka hjá flokkstjóra
   var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
-  var ids = ['pg-dash','pg-dagbok','pg-taeki','pg-pokar', 'pg-saekja-poka'];
   for (var i = 0; i < btns.length; i++) {
-    if (btns[i]) btns[i].classList.toggle('active', ids[i] === p);
+    var onclickAttr = btns[i].getAttribute('onclick') || '';
+    if (onclickAttr.includes('showPage')) {
+      btns[i].classList.toggle('active', onclickAttr.includes(p));
+    } else {
+      btns[i].classList.remove('active'); // Pössum að Rauði takkinn fái ekki ramma
+    }
   }
   
   if (p === 'pg-dagbok') renderMyDiary();
   if (p === 'pg-taeki') loadTodayTools();
-  if (p === 'pg-pokar') {
-    renderMyBags();
-    setTimeout(function() { initReportMap(); }, 50);
+  if (p === 'pg-pokar') { renderMyBags(); setTimeout(function() { initReportMap(); }, 50); }
+  if (p === 'pg-saekja-poka') { renderBags(); if(map) { setTimeout(function() { map.invalidateSize(); }, 50); } }
+}
+
+var adminTaskMap = null;
+var adminTaskMarker = null;
+
+function initAdminTaskMap() {
+  if (!adminTaskMap) {
+    adminTaskMap = L.map('adminTaskMap').setView([64.0886, -21.9066], 13); // Garðabær
+    
+    // 1. Gervihnattamyndir
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19
+    }).addTo(adminTaskMap);
+    
+    // 2. Götuheiti yfir gervihnattamyndirnar (Gegnsætt lag)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19
+    }).addTo(adminTaskMap);
+
+    adminTaskMap.on('click', function(e) {
+      if (!adminTaskMarker) {
+        adminTaskMarker = L.marker(e.latlng, {draggable: true}).addTo(adminTaskMap);
+        adminTaskMarker.on('dragend', function(ev) {
+          var pos = ev.target.getLatLng();
+          document.getElementById('taskLat').value = pos.lat;
+          document.getElementById('taskLng').value = pos.lng;
+        });
+      } else {
+        adminTaskMarker.setLatLng(e.latlng);
+      }
+      document.getElementById('taskLat').value = e.latlng.lat;
+      document.getElementById('taskLng').value = e.latlng.lng;
+      document.getElementById('adminMapStatus').textContent = '📍 Pinni settur - Hægt að draga til að færa';
+      document.getElementById('adminMapStatus').style.color = 'var(--green)';
+    });
   }
-  if (p === 'pg-saekja-poka') {
-    renderBags();
-    if(map) { setTimeout(function() { map.invalidateSize(); }, 50); }
+  setTimeout(function() { adminTaskMap.invalidateSize(); }, 200);
+}
+
+var allTasksMap = null;
+var allTasksMarkers = [];
+
+// Sækjum litaða pinna beint af netinu (Leaflet styður þetta natively)
+var iconBlue = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+var iconGreen = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+var iconOrange = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+});
+
+function renderAllTasksMap() {
+  if (!allTasksMap) {
+    allTasksMap = L.map('allTasksMap').setView([64.0886, -21.9066], 13); // Garðabær
+    // Gervihnattamynd
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(allTasksMap);
+    // Götuheiti yfir (Gegnsætt)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(allTasksMap);
+  }
+  
+  setTimeout(function() { allTasksMap.invalidateSize(); }, 200);
+
+  // Hreinsum gamla pinna af kortinu
+  for(var i=0; i<allTasksMarkers.length; i++) { allTasksMap.removeLayer(allTasksMarkers[i]); }
+  allTasksMarkers = [];
+
+  // Prentum alla pinna út frá stöðu
+  for (var i = 0; i < tasks.length; i++) {
+    var t = tasks[i];
+    if (t.lat && t.lng) {
+      var isComp = (t.completed === 'Já' || t.completed === true);
+      
+      var assignedGroup = null;
+      for (var j = 0; j < groups.length; j++) {
+        if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
+      }
+
+      var mIcon = iconBlue; // Sjálfgefið: Laust
+      var statusText = "Óklárað";
+      
+      if (isComp) { 
+        mIcon = iconGreen; 
+        statusText = "Klárað" + (t.completedBy ? " af " + t.completedBy : ""); 
+      } else if (assignedGroup) { 
+        mIcon = iconOrange; 
+        statusText = "Í vinnslu hjá " + assignedGroup.name; 
+      }
+
+      // Glugginn sem opnast þegar smellt er á pinna
+      var popupHtml = "<div style='font-family:\"DM Sans\", sans-serif;'>";
+      popupHtml += "<strong style='font-size:14px;'>" + t.name + "</strong><br>";
+      popupHtml += "<span style='font-size:12px; color:#6B7280;'>" + (t.loc || 'Engin staðsetning skráð') + "</span><br><br>";
+      popupHtml += "<span style='font-size:12px; font-weight:600;'>" + statusText + "</span>";
+      popupHtml += "</div>";
+      
+      var marker = L.marker([t.lat, t.lng], {icon: mIcon}).bindPopup(popupHtml).addTo(allTasksMap);
+      allTasksMarkers.push(marker);
+    }
   }
 }
 
 function showAdmin(p) {
+  // NÝTT: Ef stjórnandi smellir á poka-flipana, opnum við flokkstjóra sýnina
+  if (p === 'pg-pokar' || p === 'pg-saekja-poka') {
+    showSection('flokkstjori');
+    showPage(p);
+    return;
+  }
+
   var pages = document.querySelectorAll('.admin-page');
   for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  document.getElementById(p).classList.add('active');
   
+  var target = document.getElementById(p);
+  if(target) target.classList.add('active');
+  
+  // Merkja réttan takka sem 'active'
   var btns = document.querySelectorAll('.admin-tab');
-  var ids = ['adm-overview', 'adm-groups','adm-tasks','adm-dagbok','adm-taeki','adm-history']; 
-  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', ids[i] === p);
+  for (var i = 0; i < btns.length; i++) {
+    var onclickAttr = btns[i].getAttribute('onclick') || '';
+    btns[i].classList.toggle('active', onclickAttr.includes(p));
+  }
   
   if (p === 'adm-overview') renderAdminOverview();
   if (p === 'adm-groups') renderAdminGroups();
-  if (p === 'adm-tasks') renderTaskList();
+  if (p === 'adm-tasks') { renderTaskList(); initAdminTaskMap(); }
   if (p === 'adm-dagbok') renderAdminDiary();
   if (p === 'adm-taeki') renderAdminTools(); 
   if (p === 'adm-history') renderAdminHistory();
@@ -618,6 +766,7 @@ function doLogin() {
       renderMyTask(); renderMyDiary();
     }
   });
+  updateAdminUI();
 }
 
 function restoreSession() {
@@ -630,6 +779,7 @@ function restoreSession() {
       else { showSection('flokkstjori'); showPage('pg-dash'); }
     } catch(e) { localStorage.removeItem('vg_user'); }
   }
+  updateAdminUI();
 }
 
 function doLogout() {
@@ -650,6 +800,14 @@ function doLogout() {
 
   showSection('public');
   renderPublic();
+  updateAdminUI();
+}
+
+function updateAdminUI() {
+  var backBtn = document.getElementById('nav-btn-tilbaka');
+  if(backBtn) {
+    backBtn.style.display = (currentUser && currentUser.role === 'admin') ? 'inline-block' : 'none';
+  }
 }
 
 // --- FORSÍÐA (Almenningur) ---
@@ -725,7 +883,7 @@ function renderMyTask() {
   }
   
   var groupName = g ? (g.name || '') : '';
-  var isSpecialGroup = (groupName === 'Jokers' || groupName === 'EGO');
+  var isSpecialGroup = (g && g.exp === 4) || (groupName === 'Jokers' || groupName === 'EGO');
   
   if (isSpecialGroup) {
     html += '<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); font-weight:500;">Ykkar verkefnum er stýrt beint af yfirflokkstjórum.</div>';
@@ -754,6 +912,7 @@ function requestNewTask() {
     if (g.exp === 1) { isDiffOk = (tasks[i].diff === 1); } 
     else if (g.exp === 2) { isDiffOk = (tasks[i].diff === 2); } 
     else if (g.exp === 3) { isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3); }
+    if (tasks[i].diff === 4) { isDiffOk = false; }
     
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
     var isNotAssignedToOthers = !assignedTaskIds.includes(String(tasks[i].id));
@@ -1129,12 +1288,15 @@ function saveBags() {
   var g = null;
   for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
 
+  var currentGid = currentUser.gid || ('admin_' + currentUser.username);
+  var assignedName = g ? g.name : (currentUser.displayName + ' (Stjórnandi)');
+
   var btn = document.getElementById('bagSaveBtn');
   var origText = btn.textContent;
   btn.textContent = 'Vistar...'; btn.disabled = true;
 
   var theBag = {
-    id: 'b' + Date.now(), gid: currentUser.gid, groupName: g ? g.name : '',
+    id: 'b' + Date.now(), gid: currentGid, groupName: assignedName,
     date: todayISO(), qty: qty, loc: loc, lat: lat, lng: lng, pickedUp: '', pickedUpBy: '' 
   };
 
@@ -1153,9 +1315,9 @@ function saveBags() {
 function renderMyBags() {
   var html = '';
   var today = todayISO();
+  var currentGid = currentUser.gid || ('admin_' + currentUser.username);
   for (var i = 0; i < bags.length; i++) {
-    // Sýnum bara poka dagsins frá þessum flokki
-    if (bags[i].gid === currentUser.gid && String(bags[i].date).includes(today)) {
+    if (bags[i].gid === currentGid && String(bags[i].date).includes(today)) {
       var isPicked = (bags[i].pickedUp === 'Já');
       
       html += '<div class="group-list-item">';
@@ -1348,7 +1510,7 @@ function renderAdminGroups() {
       if (g.exp === 1) return tDiff === 1;           // Byrjendur: Bara Stig 1
       if (g.exp === 2) return tDiff === 2;           // Miðlungs: Bara Stig 2
       if (g.exp === 3) return (tDiff === 2 || tDiff === 3); // Reyndir: Stig 2 og 3
-      
+      if (g.exp === 4) return true;
       return false;
     });
 
@@ -1379,7 +1541,7 @@ function renderAdminGroups() {
     html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
     // Ef þú breytir reynslunni hér, uppfærist listinn sjálfkrafa (renderAdminGroups er kallað í setExp)
-    html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option></select>';
+    html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option><option value="4" ' + (g.exp==4?'selected':'') + '>Sérflokkur</option></select>';
     html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
     html += '<button class="del-btn" onclick="deleteGroup(\'' + g.id + '\')">&#215;</button>';
@@ -1496,6 +1658,29 @@ function startEditTask(tid) {
   document.getElementById('taskMap').value = t.mapUrl || '';
   document.getElementById('taskZone').value = t.zone || '1';
   
+  // Setja inn Hnit og Pinna ef til staðar
+  document.getElementById('taskLat').value = t.lat || '';
+  document.getElementById('taskLng').value = t.lng || '';
+  var statusEl = document.getElementById('adminMapStatus');
+  
+  if (t.lat && t.lng) {
+    statusEl.textContent = '📍 Pinni settur - Hægt að draga til að færa';
+    statusEl.style.color = 'var(--green)';
+    if (!adminTaskMarker && adminTaskMap) {
+      adminTaskMarker = L.marker([t.lat, t.lng], {draggable: true}).addTo(adminTaskMap);
+    } else if (adminTaskMarker) {
+      adminTaskMarker.setLatLng([t.lat, t.lng]);
+    }
+    if(adminTaskMap) adminTaskMap.setView([t.lat, t.lng], 16);
+  } else {
+    statusEl.textContent = 'Ekkert merkt - Smelltu á kortið til að setja pinna';
+    statusEl.style.color = 'var(--text-3)';
+    if (adminTaskMarker && adminTaskMap) {
+      adminTaskMap.removeLayer(adminTaskMarker);
+      adminTaskMarker = null;
+    }
+  }
+  
   document.getElementById('taskFormTitle').textContent = 'Breyta verkefni';
   document.getElementById('taskSaveBtn').textContent = 'Vista breytingar';
   document.getElementById('taskCancelBtn').style.display = '';
@@ -1510,6 +1695,17 @@ function cancelTaskEdit() {
   document.getElementById('taskDesc').value = '';
   document.getElementById('taskMap').value = '';
   document.getElementById('taskZone').value = '1';
+  
+  // Hreinsa kortið
+  document.getElementById('taskLat').value = '';
+  document.getElementById('taskLng').value = '';
+  var statusEl = document.getElementById('adminMapStatus');
+  statusEl.textContent = 'Ekkert merkt - Smelltu á kortið til að setja pinna';
+  statusEl.style.color = 'var(--text-3)';
+  if (adminTaskMarker && adminTaskMap) {
+    adminTaskMap.removeLayer(adminTaskMarker);
+    adminTaskMarker = null;
+  }
 
   document.getElementById('taskFormTitle').textContent = 'Bæta við verkefni';
   document.getElementById('taskSaveBtn').textContent = 'Bæta við verkefni';
@@ -1525,6 +1721,14 @@ function addTask() {
   var loc = document.getElementById('taskLoc').value.trim();
   var desc = document.getElementById('taskDesc').value.trim();
   var mapUrl = document.getElementById('taskMap').value.trim();
+  var lat = document.getElementById('taskLat').value;
+  var lng = document.getElementById('taskLng').value;
+  
+  // NÝTT: Búum til Google Maps link sjálfkrafa ef hann var ekki sleginn inn handvirkt
+  if (!mapUrl && lat && lng) {
+    mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
+  }
+
   var theTask = null;
 
   if (editingTaskId) {
@@ -1532,13 +1736,17 @@ function addTask() {
       if (tasks[i].id === editingTaskId) {
         tasks[i].name = name; tasks[i].diff = diff; tasks[i].loc = loc;
         tasks[i].desc = desc; tasks[i].mapUrl = mapUrl; tasks[i].zone = zone;
+        tasks[i].lat = lat; tasks[i].lng = lng; // Vistum hnitin
         theTask = tasks[i];
         logHistory('edit_task', 'Breytti verkefni: ' + name, editingTaskId, name, '', '');
         break;
       }
     }
   } else {
-    theTask = {id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, desc: desc, mapUrl: mapUrl, completed: '', completedDate: ''};
+    theTask = {
+      id: 't'+Date.now(), name: name, diff: diff, zone: zone, loc: loc, 
+      desc: desc, mapUrl: mapUrl, lat: lat, lng: lng, completed: '', completedDate: ''
+    };
     tasks.push(theTask);
     logHistory('create_task', 'Nýtt verkefni: ' + name, theTask.id, name, '', '');
   }
@@ -1546,7 +1754,7 @@ function addTask() {
   if (theTask) {
     apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
     notify(editingTaskId ? 'Verkefni uppfært' : 'Verkefni bætt við');
-    cancelTaskEdit();
+    cancelTaskEdit(); // Hreinsar kortið líka sjálfkrafa!
     renderTaskList();
     renderAdminGroups(); 
     renderPublic(); 
@@ -1595,12 +1803,13 @@ function toggleTaskComplete(tid) {
 }
 
 function renderTaskList() {
-  var htmlActive = '';
+  var htmlInProgress = '';
+  var htmlAvailable = '';
   var htmlCompleted = '';
-  var activeCount = 0;
-  var completedCount = 0;
+  var countInProgress = 0;
+  var countAvailable = 0;
+  var countCompleted = 0;
 
-  // --- 1. RÖÐUN ---
   var sortedTasks = tasks.slice().sort(function(a, b) {
     var diffA = parseInt(a.diff) || 0;
     var diffB = parseInt(b.diff) || 0;
@@ -1614,31 +1823,32 @@ function renderTaskList() {
     var t = sortedTasks[i];
     var isCompleted = (t.completed === 'Já' || t.completed === true);
     
-    // Finnum flokk
     var assignedGroup = null;
     for (var j = 0; j < groups.length; j++) {
-      if (String(groups[j].taskId) === String(t.id)) {
-        assignedGroup = groups[j];
-        break;
-      }
+      if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
     }
 
     var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
     var statusHtml = '';
+    var cardCategory = ''; 
     
     if (isCompleted) {
       var finisher = t.completedBy ? ' af ' + t.completedBy : '';
       statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')' + finisher + '</span>';
+      cardCategory = 'completed';
     } else if (assignedGroup) {
       statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
+      cardCategory = 'in-progress';
     } else {
-      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>';
+      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Óklárað</span>';
+      cardCategory = 'available';
     }
     
-    // Byggjum spjaldið
-    var diffLabel = (parseInt(t.diff) > 0) ? 'Stig ' + t.diff : '*';
+    var diffLabel = '*';
+    if (parseInt(t.diff) > 0) diffLabel = (parseInt(t.diff) === 4) ? 'Sérverkefni' : 'Stig ' + t.diff;
+    
     var cardHtml = '<div class="task-list-item">';
-    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + diffLabel + (t.mapUrl ? ' &bull; <a href="' + t.mapUrl + '" target="_blank">Kort</a>' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
+    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + diffLabel + (t.lat ? ' &bull; 📍 Á korti' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
     cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
     cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
     cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
@@ -1648,37 +1858,44 @@ function renderTaskList() {
     cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
     cardHtml += '</div></div>';
 
-    if (isCompleted) {
-      htmlCompleted += cardHtml;
-      completedCount++;
-    } else {
-      htmlActive += cardHtml;
-      activeCount++;
-    }
+    if (cardCategory === 'completed') { htmlCompleted += cardHtml; countCompleted++; }
+    else if (cardCategory === 'in-progress') { htmlInProgress += cardHtml; countInProgress++; }
+    else { htmlAvailable += cardHtml; countAvailable++; }
   }
 
-  // --- 2. SAMSETNING Á LOKA-HTML ---
-  var finalHtml = '';
-  
-  // Fyrirsögn fyrir virk verkefni með fjölda
-  finalHtml += '<div class="filter-row"><h3>Virk verkefni (' + activeCount + ')</h3></div>';
-  
-  if (activeCount === 0) {
-    finalHtml += '<p style="font-size:13px;color:var(--text-2);margin-bottom:2rem;">Engin virk verkefni.</p>';
-  } else {
-    finalHtml += htmlActive;
-  }
-  
-  // Fyrirsögn fyrir kláruð verkefni
-  finalHtml += '<div class="filter-row" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>Kláruð verkefni (' + completedCount + ')</h3></div>';
-  
-  if (completedCount === 0) {
-    finalHtml += '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni ennþá.</p>';
-  } else {
-    finalHtml += htmlCompleted;
-  }
+  // --- FLIPARNIR FJÓRIR ---
+  var navHtml = '<div class="inner-nav" style="margin-top: 1rem; margin-bottom: 1.5rem;">';
+  navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + countInProgress + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'available' ? 'active' : '') + '" onclick="switchTaskTab(\'available\')">Óklárað (' + countAvailable + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'completed' ? 'active' : '') + '" onclick="switchTaskTab(\'completed\')">Klárað (' + countCompleted + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'map-view' ? 'active' : '') + '" onclick="switchTaskTab(\'map-view\')">🗺️ Kort af öllu</button>'; // NÝI FLIPINN
+  navHtml += '</div>';
 
+  var finalHtml = navHtml;
+
+  finalHtml += '<div style="display:' + (currentTaskTab === 'in-progress' ? 'block' : 'none') + '">';
+  finalHtml += htmlInProgress || '<p style="font-size:13px;color:var(--text-2)">Engin verkefni í vinnslu.</p>';
+  finalHtml += '</div>';
+
+  finalHtml += '<div style="display:' + (currentTaskTab === 'available' ? 'block' : 'none') + '">';
+  finalHtml += htmlAvailable || '<p style="font-size:13px;color:var(--text-2)">Engin laus verkefni.</p>';
+  finalHtml += '</div>';
+
+  finalHtml += '<div style="display:' + (currentTaskTab === 'completed' ? 'block' : 'none') + '">';
+  finalHtml += htmlCompleted || '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni.</p>';
+  finalHtml += '</div>';
+
+  // Prentum HTML-ið fyrir listana
   document.getElementById('taskListAdmin').innerHTML = finalHtml;
+
+  // Stjórnum kortinu (Fela eða sýna)
+  var mapWrap = document.getElementById('allTasksMapWrap');
+  if (currentTaskTab === 'map-view') {
+    if (mapWrap) mapWrap.style.display = 'block';
+    renderAllTasksMap(); // Uppfæra pinna
+  } else {
+    if (mapWrap) mapWrap.style.display = 'none';
+  }
 }
 
 function renderAdminTools() {
