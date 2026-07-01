@@ -1865,10 +1865,10 @@ function renderTaskList() {
 
   // --- FLIPARNIR FJÓRIR ---
   var navHtml = '<div class="inner-nav" style="margin-top: 1rem; margin-bottom: 1.5rem;">';
-  navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + countInProgress + ')</button>';
   navHtml += '<button class="' + (currentTaskTab === 'available' ? 'active' : '') + '" onclick="switchTaskTab(\'available\')">Óklárað (' + countAvailable + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + countInProgress + ')</button>';
   navHtml += '<button class="' + (currentTaskTab === 'completed' ? 'active' : '') + '" onclick="switchTaskTab(\'completed\')">Klárað (' + countCompleted + ')</button>';
-  navHtml += '<button class="' + (currentTaskTab === 'map-view' ? 'active' : '') + '" onclick="switchTaskTab(\'map-view\')">🗺️ Kort af öllu</button>'; // NÝI FLIPINN
+  navHtml += '<button class="' + (currentTaskTab === 'map-view' ? 'active' : '') + '" onclick="switchTaskTab(\'map-view\')">Kort af öllu</button>'; // NÝI FLIPINN
   navHtml += '</div>';
 
   var finalHtml = navHtml;
