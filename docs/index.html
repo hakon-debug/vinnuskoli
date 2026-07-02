@@ -1360,7 +1360,7 @@ function renderBags() {
     if (String(bags[i].date).includes(today) && bags[i].pickedUp !== 'Já') {
       activeBags.push(bags[i]);
       html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].groupName + ' (' + bags[i].qty + ' pokar)</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
+      html += '<div><strong>' + bags[i].groupName + '   (Fjöldi: ' + bags[i].qty + ')</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
       html += '<div style="display:flex;gap:6px;">';
       html += '<a class="btn-outline" href="https://maps.google.com/?q=' + bags[i].lat + ',' + bags[i].lng + '" target="_blank" style="padding:4px 8px; font-size:11px;">Kort</a>';
       html += '<button class="btn-outline" onclick="markBagPickedUp(\'' + bags[i].id + '\')" style="padding:4px 8px; font-size:11px; border-color:var(--green); color:var(--green)">✔️ Sótt</button>';
@@ -1423,7 +1423,7 @@ function openRouteMap() {
   }
   
   if (bagCoords.length === 0) { 
-    notify('Engir pokar bíða sóttar í dag'); 
+    notify('Engir pokar bíða'); 
     return; 
   }
 
@@ -1803,72 +1803,96 @@ function toggleTaskComplete(tid) {
 }
 
 function renderTaskList() {
-  var htmlInProgress = '';
-  var htmlAvailable = '';
-  var htmlCompleted = '';
-  var countInProgress = 0;
-  var countAvailable = 0;
-  var countCompleted = 0;
+  var inProg = [];
+  var avail = [];
+  var comp = [];
 
-  var sortedTasks = tasks.slice().sort(function(a, b) {
-    var diffA = parseInt(a.diff) || 0;
-    var diffB = parseInt(b.diff) || 0;
-    var valA = (diffA === 0) ? 99 : diffA;
-    var valB = (diffB === 0) ? 99 : diffB;
-    if (valA !== valB) return valA - valB;
-    return (a.name || '').localeCompare(b.name || '', 'is');
-  });
-
-  for (var i = 0; i < sortedTasks.length; i++) {
-    var t = sortedTasks[i];
+  // --- 1. SKIPTA VERKEFNUM Í ÞRJÁ FLOKKA ---
+  for (var i = 0; i < tasks.length; i++) {
+    var t = tasks[i];
     var isCompleted = (t.completed === 'Já' || t.completed === true);
     
     var assignedGroup = null;
     for (var j = 0; j < groups.length; j++) {
       if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
     }
+    
+    t._tempGroup = assignedGroup; // Geymum upplýsingar um flokkinn tímabundið
 
-    var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
-    var statusHtml = '';
-    var cardCategory = ''; 
-    
-    if (isCompleted) {
-      var finisher = t.completedBy ? ' af ' + t.completedBy : '';
-      statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')' + finisher + '</span>';
-      cardCategory = 'completed';
-    } else if (assignedGroup) {
-      statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + assignedGroup.name + '</span></span>';
-      cardCategory = 'in-progress';
-    } else {
-      statusHtml = '<span style="color:var(--text-3);font-weight:600;">Óklárað</span>';
-      cardCategory = 'available';
-    }
-    
-    var diffLabel = '*';
-    if (parseInt(t.diff) > 0) diffLabel = (parseInt(t.diff) === 4) ? 'Sérverkefni' : 'Stig ' + t.diff;
-    
-    var cardHtml = '<div class="task-list-item">';
-    cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + diffLabel + (t.lat ? ' &bull; 📍 Á korti' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
-    cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
-    cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
-    cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
-    cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
-    cardHtml += '</div>';
-    var btnText = isCompleted ? 'Opna aftur' : 'Merkja klárað';
-    cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
-    cardHtml += '</div></div>';
-
-    if (cardCategory === 'completed') { htmlCompleted += cardHtml; countCompleted++; }
-    else if (cardCategory === 'in-progress') { htmlInProgress += cardHtml; countInProgress++; }
-    else { htmlAvailable += cardHtml; countAvailable++; }
+    if (isCompleted) comp.push(t);
+    else if (assignedGroup) inProg.push(t);
+    else avail.push(t);
   }
 
-  // --- FLIPARNIR FJÓRIR ---
+  // --- 2. RÖÐUN FYRIR "Í VINNSLU" OG "LAUST" (Erfiðleikastig -> Nafn) ---
+  function sortDiffAndName(a, b) {
+    var diffA = parseInt(a.diff) || 0, diffB = parseInt(b.diff) || 0;
+    var valA = (diffA === 0) ? 99 : diffA, valB = (diffB === 0) ? 99 : diffB;
+    if (valA !== valB) return valA - valB;
+    return (a.name || '').localeCompare(b.name || '', 'is');
+  }
+  inProg.sort(sortDiffAndName);
+  avail.sort(sortDiffAndName);
+
+  // --- 3. RÖÐUN FYRIR "KLÁRAÐ" (Dagsetning [elst efst] -> Nafn) ---
+  comp.sort(function(a, b) {
+    // Bragð til að raða ISO dagsetningum ('YYYY-MM-DD'). 
+    // Ef vantar dagsetningu setjum við 9999 svo það lendi neðst.
+    var dateA = a.completedDate ? String(a.completedDate).split('T')[0] : '9999-99-99';
+    var dateB = b.completedDate ? String(b.completedDate).split('T')[0] : '9999-99-99';
+    
+    if (dateA !== dateB) {
+      return dateA.localeCompare(dateB); // localeCompare virkar fullkomlega til að raða elsta á undan
+    }
+    return (a.name || '').localeCompare(b.name || '', 'is');
+  });
+
+  // --- 4. BÚA TIL HTML FYRIR SPJÖLDIN ---
+  function buildCardsHtml(arr, category) {
+    var html = '';
+    for (var k = 0; k < arr.length; k++) {
+      var t = arr[k];
+      var cleanCompDate = t.completedDate ? String(t.completedDate).split('T')[0] : '';
+      var statusHtml = '';
+      
+      if (category === 'comp') {
+        var finisher = t.completedBy ? ' af ' + t.completedBy : '';
+        statusHtml = '<span style="color:var(--green);font-weight:700;">✔️ Klárað (' + cleanCompDate + ')' + finisher + '</span>';
+      } else if (category === 'inProg') {
+        statusHtml = '<span style="color:var(--text);font-weight:600;">Í vinnslu hjá: <span style="color:var(--green)">' + t._tempGroup.name + '</span></span>';
+      } else {
+        statusHtml = '<span style="color:var(--text-3);font-weight:600;">Laust (Óúthlutað)</span>';
+      }
+
+      var diffLabel = '*';
+      if (parseInt(t.diff) > 0) diffLabel = (parseInt(t.diff) === 4) ? 'Sérverkefni' : 'Stig ' + t.diff;
+
+      var cardHtml = '<div class="task-list-item">';
+      cardHtml += '<div><div class="task-item-name">' + t.name + '</div><div class="task-item-sub">' + (ZONES[t.zone]||'Miðsvæðið') + ' &bull; ' + (t.desc||'') + ' &bull; ' + (t.loc||'') + ' &bull; ' + diffLabel + (t.lat ? ' &bull; 📍 Á korti' : '') + '<br><div style="margin-top:6px;">' + statusHtml + '</div></div></div>';
+      cardHtml += '<div style="display:flex;gap:6px;align-items:center;flex-direction:column;min-width:100px;">';
+      cardHtml += '<div style="display:flex;gap:6px;width:100%;">';
+      cardHtml += '<button class="btn-outline" style="flex:1;font-size:12px;padding:5px 0" onclick="startEditTask(\'' + t.id + '\')">&#x270E;</button>';
+      cardHtml += '<button class="del-btn" style="padding:0 8px" onclick="deleteTask(\'' + t.id + '\')">&#215;</button>';
+      cardHtml += '</div>';
+      var btnText = (category === 'comp') ? 'Opna aftur' : 'Merkja klárað';
+      cardHtml += '<button class="btn-outline" style="font-size:11px;padding:4px 8px;width:100%;" onclick="toggleTaskComplete(\'' + t.id + '\')">' + btnText + '</button>';
+      cardHtml += '</div></div>';
+      
+      html += cardHtml;
+    }
+    return html;
+  }
+
+  var htmlInProgress = buildCardsHtml(inProg, 'inProg');
+  var htmlAvailable  = buildCardsHtml(avail, 'avail');
+  var htmlCompleted  = buildCardsHtml(comp, 'comp');
+
+  // --- 5. SAMSETNING Á FLIPUM OG SKJÁ ---
   var navHtml = '<div class="inner-nav" style="margin-top: 1rem; margin-bottom: 1.5rem;">';
-  navHtml += '<button class="' + (currentTaskTab === 'available' ? 'active' : '') + '" onclick="switchTaskTab(\'available\')">Óklárað (' + countAvailable + ')</button>';
-  navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + countInProgress + ')</button>';
-  navHtml += '<button class="' + (currentTaskTab === 'completed' ? 'active' : '') + '" onclick="switchTaskTab(\'completed\')">Klárað (' + countCompleted + ')</button>';
-  navHtml += '<button class="' + (currentTaskTab === 'map-view' ? 'active' : '') + '" onclick="switchTaskTab(\'map-view\')">Kort af öllu</button>'; // NÝI FLIPINN
+  navHtml += '<button class="' + (currentTaskTab === 'available' ? 'active' : '') + '" onclick="switchTaskTab(\'available\')">Óklárað (' + avail.length + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + inProg.length + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'completed' ? 'active' : '') + '" onclick="switchTaskTab(\'completed\')">Klárað (' + comp.length + ')</button>';
+  navHtml += '<button class="' + (currentTaskTab === 'map-view' ? 'active' : '') + '" onclick="switchTaskTab(\'map-view\')">Kort af öllu</button>';
   navHtml += '</div>';
 
   var finalHtml = navHtml;
@@ -1885,14 +1909,13 @@ function renderTaskList() {
   finalHtml += htmlCompleted || '<p style="font-size:13px;color:var(--text-2)">Engin kláruð verkefni.</p>';
   finalHtml += '</div>';
 
-  // Prentum HTML-ið fyrir listana
   document.getElementById('taskListAdmin').innerHTML = finalHtml;
 
-  // Stjórnum kortinu (Fela eða sýna)
+  // Stjórnum stóra kortinu
   var mapWrap = document.getElementById('allTasksMapWrap');
   if (currentTaskTab === 'map-view') {
     if (mapWrap) mapWrap.style.display = 'block';
-    renderAllTasksMap(); // Uppfæra pinna
+    renderAllTasksMap();
   } else {
     if (mapWrap) mapWrap.style.display = 'none';
   }
