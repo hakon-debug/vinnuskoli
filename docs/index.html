@@ -1354,13 +1354,23 @@ function deleteMyBag(id) {
 
 // Sækjanda-kortið
 function renderBags() {
-  var html = '', activeBags = [], today = todayISO();
+  var html = '', activeBags = [];
   
   for (var i = 0; i < bags.length; i++) {
-    if (String(bags[i].date).includes(today) && bags[i].pickedUp !== 'Já') {
+    // TÓKUM ÚT DAGSETNINGAR SÍUNA - Núna sýnir þetta ALLA óskilaða poka
+    if (bags[i].pickedUp !== 'Já') {
       activeBags.push(bags[i]);
+      
+      // Búum til flotta íslenska dagsetningu (DD.MM.YYYY)
+      var bDate = String(bags[i].date).split('T')[0];
+      var dParts = bDate.split('-');
+      var niceDate = (dParts.length === 3) ? (dParts[2] + '.' + dParts[1] + '.' + dParts[0]) : bDate;
+
       html += '<div class="group-list-item">';
-      html += '<div><strong>' + bags[i].groupName + '   (Fjöldi: ' + bags[i].qty + ')</strong><br><span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
+      html += '<div><strong>' + bags[i].groupName + ' (Pokar: ' + bags[i].qty + ')</strong><br>';
+      // Bættum við grænni dagsetningu hérna
+      html += '<span style="font-size:11px; font-weight:700; color:var(--green);">' + niceDate + '</span> &bull; ';
+      html += '<span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
       html += '<div style="display:flex;gap:6px;">';
       html += '<a class="btn-outline" href="https://maps.google.com/?q=' + bags[i].lat + ',' + bags[i].lng + '" target="_blank" style="padding:4px 8px; font-size:11px;">Kort</a>';
       html += '<button class="btn-outline" onclick="markBagPickedUp(\'' + bags[i].id + '\')" style="padding:4px 8px; font-size:11px; border-color:var(--green); color:var(--green)">✔️ Sótt</button>';
@@ -1382,7 +1392,15 @@ function renderBags() {
 
   for (var i = 0; i < activeBags.length; i++) {
     var b = activeBags[i];
-    var marker = L.marker([b.lat, b.lng]).addTo(map).bindPopup("<b>" + b.groupName + "</b><br>" + b.qty + " pokar<br>" + b.loc);
+    
+    // Setjum dagsetninguna líka í gluggann sem opnast þegar smellt er á pinna á kortinu
+    var bDate = String(b.date).split('T')[0];
+    var dParts = bDate.split('-');
+    var niceDate = (dParts.length === 3) ? (dParts[2] + '.' + dParts[1] + '.' + dParts[0]) : bDate;
+    
+    var popupHtml = "<b>" + b.groupName + "</b><br>" + b.qty + " pokar<br><span style='font-size:11px; color:#1D9E75; font-weight:700;'>" + niceDate + "</span><br>" + b.loc;
+    
+    var marker = L.marker([b.lat, b.lng]).addTo(map).bindPopup(popupHtml);
     markers.push(marker);
   }
 }
@@ -1411,13 +1429,11 @@ function markBagPickedUp(id) {
 }
 
 function openRouteMap() {
-  var today = todayISO();
   var bagCoords = [];
   
-  // 1. Söfnum saman öllum pokum sem á eftir að sækja
+  // Söfnum saman öllum pokum sem á eftir að sækja, BURTSÉÐ FRÁ DAGSETNINGU
   for (var i = 0; i < bags.length; i++) {
-    // Sýnum bara poka dagsins sem eru ekki merktir sóttir
-    if (String(bags[i].date).includes(today) && bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
+    if (bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
       bagCoords.push(bags[i].lat + ',' + bags[i].lng);
     }
   }
@@ -1427,12 +1443,10 @@ function openRouteMap() {
     return; 
   }
 
-  // 2. Búum til slóðina. 
-  // Við notum "My+Location" sem byrjunarpunkt. 
-  // Google Maps appið í símanum mun sjálfkrafa nota GPS símans.
+  // Búum til slóðina. 
   var url = 'https://www.google.com/maps/dir/My+Location/' + bagCoords.join('/');
   
-  // 3. Opnum strax! (Þetta gerist samstundis svo síminn blokkar þetta ekki)
+  // Opnum strax!
   window.open(url, '_blank');
 }
 
