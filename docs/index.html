@@ -670,7 +670,13 @@ function renderAllTasksMap() {
   // Prentum alla pinna út frá stöðu
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
-    if (t.lat && t.lng) {
+    
+    // NÝTT: Tryggjum að þetta séu örugglega gildar tölur
+    var safeLat = parseFloat(t.lat);
+    var safeLng = parseFloat(t.lng);
+    
+    // Teiknum pinnann AÐEINS ef hnitin eru í lagi
+    if (!isNaN(safeLat) && !isNaN(safeLng)) {
       var isComp = (t.completed === 'Já' || t.completed === true);
       
       var assignedGroup = null;
@@ -679,7 +685,7 @@ function renderAllTasksMap() {
       }
 
       var mIcon = iconBlue; // Sjálfgefið: Laust
-      var statusText = "Óklárað";
+      var statusText = "Laust (Óúthlutað)";
       
       if (isComp) { 
         mIcon = iconGreen; 
@@ -689,14 +695,13 @@ function renderAllTasksMap() {
         statusText = "Í vinnslu hjá " + assignedGroup.name; 
       }
 
-      // Glugginn sem opnast þegar smellt er á pinna
       var popupHtml = "<div style='font-family:\"DM Sans\", sans-serif;'>";
       popupHtml += "<strong style='font-size:14px;'>" + t.name + "</strong><br>";
       popupHtml += "<span style='font-size:12px; color:#6B7280;'>" + (t.loc || 'Engin staðsetning skráð') + "</span><br><br>";
       popupHtml += "<span style='font-size:12px; font-weight:600;'>" + statusText + "</span>";
       popupHtml += "</div>";
       
-      var marker = L.marker([t.lat, t.lng], {icon: mIcon}).bindPopup(popupHtml).addTo(allTasksMap);
+      var marker = L.marker([safeLat, safeLng], {icon: mIcon}).bindPopup(popupHtml).addTo(allTasksMap);
       allTasksMarkers.push(marker);
     }
   }
@@ -1530,11 +1535,12 @@ function renderAdminGroups() {
 
     // --- 2. RÖÐUN: Stig 1 -> 2 -> 3 -> Sérverkefni (0) neðst ---
     filteredTasks.sort(function(a, b) {
-      var aDiff = parseInt(a.diff) || 99; // Setjum 99 svo ómerkt lendi neðst
+      var aDiff = parseInt(a.diff) || 99; 
       var bDiff = parseInt(b.diff) || 99;
       
       if (aDiff !== bDiff) return aDiff - bDiff;
-      return (a.name || '').localeCompare(b.name || '', 'is'); // Stafrófsröð
+      // BÆTT VIÐ: String() vörn
+      return String(a.name || '').localeCompare(String(b.name || ''), 'is'); 
     });
 
     // --- 3. BÚUM TIL FELLILISTANN ---
@@ -1843,22 +1849,22 @@ function renderTaskList() {
     var diffA = parseInt(a.diff) || 0, diffB = parseInt(b.diff) || 0;
     var valA = (diffA === 0) ? 99 : diffA, valB = (diffB === 0) ? 99 : diffB;
     if (valA !== valB) return valA - valB;
-    return (a.name || '').localeCompare(b.name || '', 'is');
+    // BÆTT VIÐ: String() kemur í veg fyrir að tölur krassi kerfið
+    return String(a.name || '').localeCompare(String(b.name || ''), 'is');
   }
   inProg.sort(sortDiffAndName);
   avail.sort(sortDiffAndName);
 
   // --- 3. RÖÐUN FYRIR "KLÁRAÐ" (Dagsetning [elst efst] -> Nafn) ---
   comp.sort(function(a, b) {
-    // Bragð til að raða ISO dagsetningum ('YYYY-MM-DD'). 
-    // Ef vantar dagsetningu setjum við 9999 svo það lendi neðst.
     var dateA = a.completedDate ? String(a.completedDate).split('T')[0] : '9999-99-99';
     var dateB = b.completedDate ? String(b.completedDate).split('T')[0] : '9999-99-99';
     
     if (dateA !== dateB) {
-      return dateA.localeCompare(dateB); // localeCompare virkar fullkomlega til að raða elsta á undan
+      return dateA.localeCompare(dateB); 
     }
-    return (a.name || '').localeCompare(b.name || '', 'is');
+    // BÆTT VIÐ: String() hér líka
+    return String(a.name || '').localeCompare(String(b.name || ''), 'is');
   });
 
   // --- 4. BÚA TIL HTML FYRIR SPJÖLDIN ---
