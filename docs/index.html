@@ -195,6 +195,12 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 .notif.show{opacity:1}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}.groups-grid{grid-template-columns:1fr 1fr}.main{padding:1rem}}
 .page:not(.active) #reportMap, .page:not(.active) #bagsMap, .admin-page:not(.active) #adminTaskMap { display: none !important; }
+.wheel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.wheel-overlay.show { opacity: 1; pointer-events: auto; }
+.wheel-box { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; }
+.wheel-pointer { position: absolute; top: -15px; z-index: 10; font-size: 40px; line-height: 1; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3)); }
+.wheel-canvas { border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 4px solid var(--surface); transition: transform 4s cubic-bezier(0.2, 0.8, 0.2, 1); transform: rotate(0deg); background: var(--surface); }
+.wheel-title { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 </style>
 </head>
 <body>
@@ -456,7 +462,13 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 
 </div>
 <div class="notif" id="notif"></div>
-
+<div class="wheel-overlay" id="wheelOverlay">
+  <div class="wheel-title">Dreg út nýtt verkefni...</div>
+  <div class="wheel-box">
+    <div class="wheel-pointer">👇</div>
+    <canvas id="wheelCanvas" class="wheel-canvas" width="300" height="300"></canvas>
+  </div>
+</div>
 <script>
 // --- ALMENNAR BREYTUR ---
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
@@ -917,6 +929,8 @@ function requestNewTask() {
     if (g.exp === 1) { isDiffOk = (tasks[i].diff === 1); } 
     else if (g.exp === 2) { isDiffOk = (tasks[i].diff === 2); } 
     else if (g.exp === 3) { isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3); }
+    
+    // Sérverkefni koma aldrei upp í drætti
     if (tasks[i].diff === 4) { isDiffOk = false; }
     
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
@@ -931,23 +945,35 @@ function requestNewTask() {
   
   if (!ok.length) { notify('Engin laus verkefni tiltæk fyrir ykkar svæði eða reynslustig.'); return; }
   
+  // 1. VIÐ VELJUM SIGURVEGARANN STRAX
   var pick = ok[Math.floor(Math.random() * ok.length)];
-  var old = getTask(g.taskId);
   
-  if (old) {
-    logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
-    old.completed = 'Já';
-    old.completedDate = todayISO();
-    old.completedBy = g.name; // <--- NÝJA LÍNAN: Skráir nafnið á hópnum sem var með það
-    apiCall('upsertRow', {sheet: 'tasks', row: old}, function() {});
-  }
-  
-  g.taskId = pick.id;
-  logHistory('assigned', 'Nýtt verkefni úthlutað', pick.id, pick.name, g.id, g.name);
-  
-  apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
-    if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
-    loadAll(); renderMyTask(); notify('Nýtt verkefni dregið!');
+  // 2. KÖLLUM Á LUKKUHJÓLIÐ OG LÁTUM ÞAÐ SNÚAST
+  spinTheWheel(ok, pick, function() {
+    
+    // 3. ÞESSI HLUTI KEYRIR BARA ÞEGAR HJÓLIÐ ER BÚIÐ AÐ STOPPA!
+    var old = getTask(g.taskId);
+    if (old) {
+      logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
+      old.completed = 'Já';
+      old.completedDate = todayISO();
+      old.completedBy = g.name; 
+      apiCall('upsertRow', {sheet: 'tasks', row: old}, function() {});
+    }
+    
+    g.taskId = pick.id;
+    logHistory('assigned', 'Nýtt verkefni dregið í lukkuhjóli', pick.id, pick.name, g.id, g.name);
+    
+    // Uppfærum UI-ið strax svo flokkstjórinn sjái nýja verkefnið
+    renderMyTask(); 
+    notify('🎉 Þið fenguð: ' + pick.name + '!');
+    
+    // Látum bakendann vita af breytingunni
+    apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
+      if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
+      loadAll(); 
+    });
+    
   });
 }
 
@@ -2087,6 +2113,87 @@ function renderAdminHistory() {
     }
   }
   document.getElementById('adminHistoryList').innerHTML = html;
+}
+
+function spinTheWheel(availableTasks, winningTask, callback) {
+  var overlay = document.getElementById('wheelOverlay');
+  var canvas = document.getElementById('wheelCanvas');
+  var ctx = canvas.getContext('2d');
+  
+  // Tryggjum að sigurvegarinn sé á hjólinu, og bætum við upp í 12 verkefni til að hjólið líti vel út
+  var wheelItems = [winningTask];
+  var others = availableTasks.filter(function(t) { return t.id !== winningTask.id; });
+  // Slembiröðum hinum
+  others.sort(function() { return 0.5 - Math.random(); });
+  // Tökum 11 í viðbót (eða færri ef það eru ekki nógu mörg)
+  var extras = others.slice(0, 11);
+  wheelItems = wheelItems.concat(extras);
+  // Slembiröðum hjólinu sjálfu svo sigurvegarinn sé ekki alltaf á sama stað
+  wheelItems.sort(function() { return 0.5 - Math.random(); });
+  
+  // Finnum hvar sigurvegarinn lenti
+  var winningIndex = wheelItems.findIndex(function(t) { return t.id === winningTask.id; });
+  
+  var numSlices = wheelItems.length;
+  var sliceAngle = (2 * Math.PI) / numSlices;
+  var colors = ['#1D9E75', '#157A5A', '#2b82cb', '#F59E0B', '#E53935', '#8B5CF6'];
+
+  // Teiknum hjólið
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  var centerX = canvas.width / 2;
+  var centerY = canvas.height / 2;
+  var radius = 145;
+
+  for (var i = 0; i < numSlices; i++) {
+    var startAngle = i * sliceAngle - (Math.PI / 2); // Byrjum á klukkan 12
+    var endAngle = startAngle + sliceAngle;
+    
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.stroke();
+    
+    // Setjum textann inn (passa að hann sé ekki of langur)
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(startAngle + (sliceAngle / 2));
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 13px 'DM Sans', sans-serif";
+    var shortName = wheelItems[i].name;
+    if (shortName.length > 18) shortName = shortName.substring(0, 16) + '...';
+    ctx.fillText(shortName, radius - 15, 4);
+    ctx.restore();
+  }
+
+  // Undirbúum snúning
+  var degPerSlice = 360 / numSlices;
+  // Reiknum gráður til að sigurvegarinn lendi nákvæmlega uppi klukkan 12
+  var targetRotation = -(winningIndex * degPerSlice) - (degPerSlice / 2) + 360; 
+  // Bætum við 5 heilum hringjum svo það snúist hratt í byrjun
+  var totalRotation = targetRotation + (360 * 5); 
+
+  // Endurstillum hjólið (tökum transition af tímabundið)
+  canvas.style.transition = 'none';
+  canvas.style.transform = 'rotate(0deg)';
+  
+  // Sýnum hjólið
+  overlay.classList.add('show');
+  
+  // Leyfum DOMinu að uppfæra sig, setjum svo snúninginn af stað
+  setTimeout(function() {
+    canvas.style.transition = 'transform 4s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    canvas.style.transform = 'rotate(' + totalRotation + 'deg)';
+    
+    // Þegar snúningur er búinn, lokum við hjólinu og keyrum callbackið
+    setTimeout(function() {
+      overlay.classList.remove('show');
+      setTimeout(callback, 300); // Bíðum aðeins meðan hjólið fade-ar út
+    }, 4200);
+  }, 50);
 }
 
 // --- INITIALIZATION ---
