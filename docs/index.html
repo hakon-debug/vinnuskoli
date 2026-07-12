@@ -21,6 +21,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 a{color:var(--green);text-decoration:none}
+.global-loader { position: fixed; inset: 0; background: var(--bg); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s; }
+.global-loader.hidden { opacity: 0; pointer-events: none; }
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
 .logo{font-size:16px;font-weight:600}.logo span{color:var(--green)}
 .topbar-right{display:flex;align-items:center;gap:10px}
@@ -204,6 +206,10 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
 </style>
 </head>
 <body>
+  <div class="global-loader" id="globalLoader">
+  <div class="spinner" style="width: 30px; height: 30px; border-width: 3px; margin-bottom: 15px;"></div>
+  <div style="font-size: 14px; font-weight: 600; color: var(--text-2);" id="loaderText">Sæki gögn frá Vinnuskólanum...</div>
+</div>
 <div class="topbar">
   <div class="logo">Vinnuskóli <span>Garðabæjar</span></div>
   <div class="topbar-right" id="topbarRight">
@@ -470,7 +476,6 @@ select.sm{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);b
   </div>
 </div>
 <script>
-// --- ALMENNAR BREYTUR ---
 var API = 'https://script.google.com/macros/s/AKfycbyU7LtEufbfamPEki3rmx9V2IKRgVy2MN9QrA40Op_DqLYXDYKSOLDBDhCogO1cIeBu/exec';
 var DIFFS = {'1':'Auðvelt','2':'Miðlungs','3':'Erfitt', '4':'Sérverkefni'};
 var ZONES = {'1':'Miðsvæðið', '2':'Álftanes', '3':'Urriðaholt'};
@@ -487,9 +492,9 @@ var currentTaskTab = 'in-progress';
 
 function switchTaskTab(tabId) {
   currentTaskTab = tabId;
-  renderTaskList(); // Teiknar listann aftur með rétta flipann opinn
+  renderTaskList();
 }
-// --- API SAMSΚIPTI ---
+
 function apiCall(action, params, callback) {
   var formData = new URLSearchParams();
   formData.append('action', action);
@@ -511,14 +516,23 @@ function apiCall(action, params, callback) {
   });
 }
 
-function loadAll() {
-  var grid = document.getElementById('publicGrid');
-  if(grid) grid.innerHTML = '<div class="loading-bar"><div class="spinner"></div>Sæki gögn...</div>';
+function loadAll(silent) {
+  var loader = document.getElementById('globalLoader');
+  var loaderText = document.getElementById('loaderText');
+  
+  if (loader && !silent) { 
+    loader.classList.remove('hidden'); 
+    if(loaderText) loaderText.innerHTML = 'Sæki gögn frá Vinnuskólanum...'; 
+  }
+
   apiCall('getAll', {}, function(data) {
-    if (data.error) {
-      if(grid) grid.innerHTML = '<div class="err-banner"><strong>Tenging mistókst:</strong> ' + data.error + '<br><br><button class="btn-primary" onclick="loadAll()" style="margin-top:8px">Reyna aftur</button></div>';
+    if (data.error || !data.groups) {
+      if (loaderText && !silent) {
+        loaderText.innerHTML = '<span style="color:var(--red);">Tenging rofnaði eða mistókst.</span><br><br><button class="btn-primary" onclick="loadAll()">Reyna aftur</button>';
+      }
       return;
     }
+    
     groups  = (data.groups  || []).map(function(g) { g.exp = parseInt(g.exp) || 2; g.zone = g.zone || '1'; return g; });
     tasks   = (data.tasks   || []).map(function(t) { t.diff = parseInt(t.diff) || 1; t.zone = t.zone || '1'; return t; });
     diary   = data.diary   || [];
@@ -541,10 +555,22 @@ function loadAll() {
         if (document.getElementById('pg-saekja-poka').classList.contains('active')) { renderBags(); }
       }
     }
+    
+    if (loader) loader.classList.add('hidden');
   });
 }
 
-// --- HJÁLPARFÖLL ---
+function getMyGroupName() {
+  if (!currentUser) return '';
+  if (currentUser.role === 'admin') return currentUser.displayName + ' (Stjórnandi)';
+  
+  for (var i = 0; i < groups.length; i++) {
+    if (String(groups[i].id).trim() === String(currentUser.gid).trim()) {
+      return groups[i].name;
+    }
+  }
+  return currentUser.displayName || 'Óþekktur hópur';
+}
 function getTask(id) {
   for (var i = 0; i < tasks.length; i++) { if (String(tasks[i].id) === String(id)) return tasks[i]; }
   return null;
@@ -576,11 +602,21 @@ function notify(msg) {
   setTimeout(function() { n.classList.remove('show'); }, 2500);
 }
 
-// --- STJÓRNUN Á FLIPUM (UI) ---
 function showSection(s) {
   var secs = document.querySelectorAll('.section');
   for (var i = 0; i < secs.length; i++) secs[i].classList.remove('active');
-  document.getElementById('section-' + s).classList.add('active');
+  
+  var targetSec = document.getElementById('section-' + s);
+  if (targetSec) targetSec.classList.add('active');
+
+  var backBtn = document.getElementById('nav-btn-tilbaka');
+  if (backBtn) {
+    if (currentUser && currentUser.role === 'admin' && s === 'flokkstjori') {
+      backBtn.style.display = 'inline-block';
+    } else {
+      backBtn.style.display = 'none';
+    }
+  }
 }
 
 function showPage(p) {
@@ -590,14 +626,13 @@ function showPage(p) {
   var targetPage = document.getElementById(p);
   if (targetPage) targetPage.classList.add('active');
   
-  // Merkja réttan takka hjá flokkstjóra
   var btns = document.querySelectorAll('#section-flokkstjori .inner-nav button');
   for (var i = 0; i < btns.length; i++) {
     var onclickAttr = btns[i].getAttribute('onclick') || '';
     if (onclickAttr.includes('showPage')) {
       btns[i].classList.toggle('active', onclickAttr.includes(p));
     } else {
-      btns[i].classList.remove('active'); // Pössum að Rauði takkinn fái ekki ramma
+      btns[i].classList.remove('active');
     }
   }
   
@@ -612,14 +647,12 @@ var adminTaskMarker = null;
 
 function initAdminTaskMap() {
   if (!adminTaskMap) {
-    adminTaskMap = L.map('adminTaskMap').setView([64.0886, -21.9066], 13); // Garðabær
+    adminTaskMap = L.map('adminTaskMap').setView([64.0886, -21.9066], 13);
     
-    // 1. Gervihnattamyndir
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19
     }).addTo(adminTaskMap);
     
-    // 2. Götuheiti yfir gervihnattamyndirnar (Gegnsætt lag)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
       maxZoom: 19
     }).addTo(adminTaskMap);
@@ -647,7 +680,6 @@ function initAdminTaskMap() {
 var allTasksMap = null;
 var allTasksMarkers = [];
 
-// Sækjum litaða pinna beint af netinu (Leaflet styður þetta natively)
 var iconBlue = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -666,28 +698,22 @@ var iconOrange = new L.Icon({
 
 function renderAllTasksMap() {
   if (!allTasksMap) {
-    allTasksMap = L.map('allTasksMap').setView([64.0886, -21.9066], 13); // Garðabær
-    // Gervihnattamynd
+    allTasksMap = L.map('allTasksMap').setView([64.0886, -21.9066], 13);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(allTasksMap);
-    // Götuheiti yfir (Gegnsætt)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(allTasksMap);
   }
   
   setTimeout(function() { allTasksMap.invalidateSize(); }, 200);
 
-  // Hreinsum gamla pinna af kortinu
   for(var i=0; i<allTasksMarkers.length; i++) { allTasksMap.removeLayer(allTasksMarkers[i]); }
   allTasksMarkers = [];
 
-  // Prentum alla pinna út frá stöðu
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
     
-    // NÝTT: Tryggjum að þetta séu örugglega gildar tölur
     var safeLat = parseFloat(t.lat);
     var safeLng = parseFloat(t.lng);
     
-    // Teiknum pinnann AÐEINS ef hnitin eru í lagi
     if (!isNaN(safeLat) && !isNaN(safeLng)) {
       var isComp = (t.completed === 'Já' || t.completed === true);
       
@@ -696,7 +722,7 @@ function renderAllTasksMap() {
         if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
       }
 
-      var mIcon = iconBlue; // Sjálfgefið: Laust
+      var mIcon = iconBlue;
       var statusText = "Laust (Óúthlutað)";
       
       if (isComp) { 
@@ -720,7 +746,6 @@ function renderAllTasksMap() {
 }
 
 function showAdmin(p) {
-  // NÝTT: Ef stjórnandi smellir á poka-flipana, opnum við flokkstjóra sýnina
   if (p === 'pg-pokar' || p === 'pg-saekja-poka') {
     showSection('flokkstjori');
     showPage(p);
@@ -733,7 +758,6 @@ function showAdmin(p) {
   var target = document.getElementById(p);
   if(target) target.classList.add('active');
   
-  // Merkja réttan takka sem 'active'
   var btns = document.querySelectorAll('.admin-tab');
   for (var i = 0; i < btns.length; i++) {
     var onclickAttr = btns[i].getAttribute('onclick') || '';
@@ -748,7 +772,6 @@ function showAdmin(p) {
   if (p === 'adm-history') renderAdminHistory();
 }
 
-// --- INNSKRÁNING ---
 function doLogin() {
   var u = document.getElementById('loginUser').value.trim();
   var p = document.getElementById('loginPass').value.trim();
@@ -783,8 +806,22 @@ function doLogin() {
       renderMyTask(); renderMyDiary();
     }
   });
-  updateAdminUI();
 }
+
+setInterval(function() {
+  var activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+    return; 
+  }
+  
+  var wheel = document.getElementById('wheelOverlay');
+  if (wheel && wheel.classList.contains('show')) {
+    return;
+  }
+  
+  loadAll(true);
+  
+}, 3 * 60 * 1000); 
 
 function restoreSession() {
   var savedUser = localStorage.getItem('vg_user');
@@ -792,11 +829,13 @@ function restoreSession() {
     try {
       currentUser = JSON.parse(savedUser);
       document.getElementById('topbarRight').innerHTML = '<span class="badge">' + currentUser.displayName + '</span><button class="btn-outline" onclick="doLogout()">Útskrá</button>';
-      if (currentUser.role === 'admin') { showSection('admin'); } 
-      else { showSection('flokkstjori'); showPage('pg-dash'); }
+      if (currentUser.role === 'admin') { 
+        showSection('admin'); 
+      } else { 
+        showSection('flokkstjori'); showPage('pg-dash'); 
+      }
     } catch(e) { localStorage.removeItem('vg_user'); }
   }
-  updateAdminUI();
 }
 
 function doLogout() {
@@ -817,17 +856,8 @@ function doLogout() {
 
   showSection('public');
   renderPublic();
-  updateAdminUI();
 }
 
-function updateAdminUI() {
-  var backBtn = document.getElementById('nav-btn-tilbaka');
-  if(backBtn) {
-    backBtn.style.display = (currentUser && currentUser.role === 'admin') ? 'inline-block' : 'none';
-  }
-}
-
-// --- FORSÍÐA (Almenningur) ---
 function renderPublic() {
   var d = new Date();
   document.getElementById('todayDate').textContent = getIcelandicDate(d);
@@ -847,7 +877,11 @@ function renderPublic() {
     var groupLeaders = [];
     for (var j = 0; j < leaders.length; j++) {
       if (String(leaders[j].gid) === String(g.id)) {
-        var pNum = leaders[j].phone ? ': ' + leaders[j].phone : '';
+        var pNum = '';
+        if (leaders[j].phone) {
+          var cleanPhone = String(leaders[j].phone).replace(/\s/g, ''); 
+          pNum = ': <a href="tel:' + cleanPhone + '" onclick="event.stopPropagation()" style="color:var(--green); text-decoration:underline;">' + leaders[j].phone + '</a>';
+        }
         groupLeaders.push('📞 ' + leaders[j].name + pNum);
       }
     }
@@ -876,7 +910,6 @@ function openModal(gid) {
   m.addEventListener('click', function(e) { if (e.target === m) m.parentNode.removeChild(m); });
 }
 
-// --- VERKEFNI (Flokkstjórar) ---
 function hasRequestedTaskToday(gid) {
   var today = todayISO();
   for (var i = 0; i < appHistory.length; i++) {
@@ -930,7 +963,6 @@ function requestNewTask() {
     else if (g.exp === 2) { isDiffOk = (tasks[i].diff === 2); } 
     else if (g.exp === 3) { isDiffOk = (tasks[i].diff === 2 || tasks[i].diff === 3); }
     
-    // Sérverkefni koma aldrei upp í drætti
     if (tasks[i].diff === 4) { isDiffOk = false; }
     
     var isNotCurrent = String(tasks[i].id) !== String(g.taskId);
@@ -945,13 +977,10 @@ function requestNewTask() {
   
   if (!ok.length) { notify('Engin laus verkefni tiltæk fyrir ykkar svæði eða reynslustig.'); return; }
   
-  // 1. VIÐ VELJUM SIGURVEGARANN STRAX
   var pick = ok[Math.floor(Math.random() * ok.length)];
   
-  // 2. KÖLLUM Á LUKKUHJÓLIÐ OG LÁTUM ÞAÐ SNÚAST
   spinTheWheel(ok, pick, function() {
     
-    // 3. ÞESSI HLUTI KEYRIR BARA ÞEGAR HJÓLIÐ ER BÚIÐ AÐ STOPPA!
     var old = getTask(g.taskId);
     if (old) {
       logHistory('completed', 'Verkefni lokið', old.id, old.name, g.id, g.name);
@@ -964,11 +993,9 @@ function requestNewTask() {
     g.taskId = pick.id;
     logHistory('assigned', 'Nýtt verkefni dregið í lukkuhjóli', pick.id, pick.name, g.id, g.name);
     
-    // Uppfærum UI-ið strax svo flokkstjórinn sjái nýja verkefnið
     renderMyTask(); 
     notify('🎉 Þið fenguð: ' + pick.name + '!');
     
-    // Látum bakendann vita af breytingunni
     apiCall('assignTaskSingle', {gid: g.id, tid: pick.id}, function(res) {
       if(res.error) { notify('Villa við að sækja verkefni: ' + res.error); return; }
       loadAll(); 
@@ -977,8 +1004,6 @@ function requestNewTask() {
   });
 }
 
-
-// --- DAGBÓK (Flokkstjórar) ---
 function renderMyDiary() {
   var entries = [];
   for (var i = 0; i < diary.length; i++) {
@@ -1053,11 +1078,10 @@ function saveDiary() {
     btn.disabled = true; btn.style.opacity = '0.7';
   }
 
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
-  
+  var myGroupName = getMyGroupName();
   var row = {
-    gid: currentUser.gid, group: g ? g.name : '', 
+    gid: currentUser.gid || ('admin_' + currentUser.username), 
+    group: myGroupName, 
     date: todayISO(), dateStr: todayStr(), 
     text: txt, attendance: att, registered: reg, user: currentUser.username
   };
@@ -1087,7 +1111,6 @@ function saveDiary() {
   });
 }
 
-// --- VERKFÆRI (Flokkstjórar) ---
 var myCurrentTools = [];
 
 function loadTodayTools() {
@@ -1187,8 +1210,7 @@ function returnAllTools() {
 
 function saveTools() {
   var today = todayISO();
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
+  var myGroupName = getMyGroupName();
 
   var toolsToSave = [];
   var summaryLog = [];
@@ -1198,11 +1220,6 @@ function saveTools() {
   for (var i = 0; i < myCurrentTools.length; i++) {
     var t = myCurrentTools[i];
     
-    // ATHUGUN: Á að vista þetta verkfæri?
-    // Við vistum ef:
-    // 1. Það er búið að taka eitthvað eða skila einhverju (> 0)
-    // 2. EÐA ef það var þegar búið að vista þetta verkfæri í dag (svo hægt sé að núllstilla villu)
-    
     var alreadyExists = tools.some(function(dbItem) {
       var dbDate = (dbItem.date || "").split('T')[0];
       return dbItem.gid === currentUser.gid && dbDate === today && dbItem.name === t.name;
@@ -1211,7 +1228,7 @@ function saveTools() {
     if (t.taken > 0 || t.returned > 0 || alreadyExists) {
       toolsToSave.push({
         gid: currentUser.gid,
-        group: g ? g.name : '',
+        group: myGroupName,
         date: today,
         name: t.name,
         taken: t.taken,
@@ -1247,10 +1264,9 @@ function saveTools() {
     if (res.error) { notify('Villa: ' + res.error); return; }
     
     var histMsg = hasMissing ? 'Vantar að skila: ' + summaryLog.join(', ') : (hasAnyActivity ? 'Öllum verkfærum skilað!' : 'Verkfæraskrá hreinsuð');
-    logHistory('tools', histMsg, '', '', currentUser.gid, g ? g.name : '');
+    logHistory('tools', histMsg, '', '', currentUser.gid, myGroupName);
     notify('Verkfæraskrá vistuð');
     
-    // Uppfæra staðbundna minnið (vinnsluminnið í símanum)
     for (var j=0; j<toolsToSave.length; j++) {
       var found = false;
       for (var k=0; k<tools.length; k++) {
@@ -1267,7 +1283,6 @@ function saveTools() {
   });
 }
 
-// --- KORT / POKAR (Flokkstjórar og Innskráðir) ---
 function initReportMap() {
   if (!reportMap) {
     reportMap = L.map('reportMap').setView([64.0886, -21.9066], 13);
@@ -1317,19 +1332,24 @@ function saveBags() {
 
   if (!lat || !lng) { notify('Vinsamlegast veldu staðsetningu á kortinu'); return; }
 
-  var g = null;
-  for (var i = 0; i < groups.length; i++) { if (groups[i].id === currentUser.gid) { g = groups[i]; break; } }
-
+  var myGroupName = getMyGroupName();
   var currentGid = currentUser.gid || ('admin_' + currentUser.username);
-  var assignedName = g ? g.name : (currentUser.displayName + ' (Stjórnandi)');
 
   var btn = document.getElementById('bagSaveBtn');
   var origText = btn.textContent;
   btn.textContent = 'Vistar...'; btn.disabled = true;
 
   var theBag = {
-    id: 'b' + Date.now(), gid: currentGid, groupName: assignedName,
-    date: todayISO(), qty: qty, loc: loc, lat: lat, lng: lng, pickedUp: '', pickedUpBy: '' 
+    id: 'b' + Date.now(), 
+    gid: currentGid, 
+    groupName: myGroupName, 
+    date: todayISO(), 
+    qty: qty, 
+    loc: loc, 
+    lat: lat, 
+    lng: lng, 
+    pickedUp: '', 
+    pickedUpBy: '' 
   };
 
   apiCall('upsertRow', {sheet: 'bags', row: theBag}, function(res) {
@@ -1358,7 +1378,6 @@ function renderMyBags() {
       if (isPicked) {
         html += '<span class="status-ok">✔️ Sótt</span>';
       } else {
-        // Takki til að eyða ef það er ekki búið að sækja pokann
         html += '<button class="del-btn" onclick="deleteMyBag(\'' + bags[i].id + '\')" style="margin-left:10px;">&#215;</button>';
       }
       html += '</div>';
@@ -1371,36 +1390,30 @@ function renderMyBags() {
 function deleteMyBag(id) {
   if (!confirm('Viltu eyða þessari tilkynningu?')) return;
 
-  // 1. Eyða úr Sheets í bakgrunni
   apiCall('deleteRow', {sheet: 'bags', id: id}, function(res) {
     if(res.error) notify('Villa: ' + res.error);
   });
 
-  // 2. Eyða úr staðbundnu minni (local array)
   bags = bags.filter(function(b) { return b.id !== id; });
 
-  // 3. Uppfæra skjáinn strax
   renderMyBags();
   notify('Tilkynning eytt');
 }
 
-// Sækjanda-kortið
 function renderBags() {
   var html = '', activeBags = [];
   
   for (var i = 0; i < bags.length; i++) {
-    // TÓKUM ÚT DAGSETNINGAR SÍUNA - Núna sýnir þetta ALLA óskilaða poka
+
     if (bags[i].pickedUp !== 'Já') {
       activeBags.push(bags[i]);
       
-      // Búum til flotta íslenska dagsetningu (DD.MM.YYYY)
       var bDate = String(bags[i].date).split('T')[0];
       var dParts = bDate.split('-');
       var niceDate = (dParts.length === 3) ? (dParts[2] + '.' + dParts[1] + '.' + dParts[0]) : bDate;
 
       html += '<div class="group-list-item">';
       html += '<div><strong>' + bags[i].groupName + ' (Pokar: ' + bags[i].qty + ')</strong><br>';
-      // Bættum við grænni dagsetningu hérna
       html += '<span style="font-size:11px; font-weight:700; color:var(--green);">' + niceDate + '</span> &bull; ';
       html += '<span style="font-size:12px;color:var(--text-2)">' + bags[i].loc + '</span></div>';
       html += '<div style="display:flex;gap:6px;">';
@@ -1425,7 +1438,6 @@ function renderBags() {
   for (var i = 0; i < activeBags.length; i++) {
     var b = activeBags[i];
     
-    // Setjum dagsetninguna líka í gluggann sem opnast þegar smellt er á pinna á kortinu
     var bDate = String(b.date).split('T')[0];
     var dParts = bDate.split('-');
     var niceDate = (dParts.length === 3) ? (dParts[2] + '.' + dParts[1] + '.' + dParts[0]) : bDate;
@@ -1463,7 +1475,6 @@ function markBagPickedUp(id) {
 function openRouteMap() {
   var bagCoords = [];
   
-  // Söfnum saman öllum pokum sem á eftir að sækja, BURTSÉÐ FRÁ DAGSETNINGU
   for (var i = 0; i < bags.length; i++) {
     if (bags[i].lat && bags[i].lng && bags[i].pickedUp !== 'Já') {
       bagCoords.push(bags[i].lat + ',' + bags[i].lng);
@@ -1475,14 +1486,11 @@ function openRouteMap() {
     return; 
   }
 
-  // Búum til slóðina. 
   var url = 'https://www.google.com/maps/dir/My+Location/' + bagCoords.join('/');
   
-  // Opnum strax!
   window.open(url, '_blank');
 }
 
-// --- ADMIN / STJÓRNENDUR ---
 function renderAdminOverview() {
   var dateInput = document.getElementById('overviewDate');
   var selectedDate = dateInput.value || todayISO();
@@ -1539,55 +1547,45 @@ function renderAdminGroups() {
     var g = groups[i];
     var t = getTask(g.taskId);
     
-    // --- 1. SÍUM VERKEFNI ÚT FRÁ REYNSLU FLOKKS ---
     var filteredTasks = tasks.filter(function(tk) {
       var isComp = (tk.completed === 'Já' || tk.completed === true);
       var isCurrent = (String(tk.id) === String(g.taskId));
       
-      // Ef verkefni er klárað, sýnum það bara ef flokkurinn er með það núna
       if (isComp && !isCurrent) return false;
 
-      var tDiff = parseInt(tk.diff) || 0; // 0 ef það er ekki merkt
+      var tDiff = parseInt(tk.diff) || 0; 
 
-      // Sérregla: Ef verkefni er ekki merkt með erfiðleika (Stig 0), sýnum það ÖLLUM
       if (tDiff === 0) return true;
 
-      // Reynslustýring
-      if (g.exp === 1) return tDiff === 1;           // Byrjendur: Bara Stig 1
-      if (g.exp === 2) return tDiff === 2;           // Miðlungs: Bara Stig 2
-      if (g.exp === 3) return (tDiff === 2 || tDiff === 3); // Reyndir: Stig 2 og 3
+      if (g.exp === 1) return tDiff === 1; 
+      if (g.exp === 2) return tDiff === 2; 
+      if (g.exp === 3) return (tDiff === 2 || tDiff === 3);
       if (g.exp === 4) return true;
       return false;
     });
 
-    // --- 2. RÖÐUN: Stig 1 -> 2 -> 3 -> Sérverkefni (0) neðst ---
     filteredTasks.sort(function(a, b) {
       var aDiff = parseInt(a.diff) || 99; 
       var bDiff = parseInt(b.diff) || 99;
       
       if (aDiff !== bDiff) return aDiff - bDiff;
-      // BÆTT VIÐ: String() vörn
       return String(a.name || '').localeCompare(String(b.name || ''), 'is'); 
     });
 
-    // --- 3. BÚUM TIL FELLILISTANN ---
     var opts = '<option value="">-- velja verkefni --</option>';
     for (var k = 0; k < filteredTasks.length; k++) {
        var tk = filteredTasks[k];
        var selected = (String(tk.id) === String(g.taskId)) ? 'selected' : '';
        var label = tk.name;
-       // Sýnum "Stig X" bara ef það er merkt
        if (parseInt(tk.diff) > 0) label += ' (Stig ' + tk.diff + ')';
        else label += ' (Sérverkefni)';
        
        opts += '<option value="' + tk.id + '" ' + selected + '>' + label + '</option>';
     }
     
-    // --- 4. BIRTUM FLOKKINN ---
     html += '<div class="group-list-item">';
     html += '<div style="flex:1;min-width:160px"><div class="group-item-name">' + g.name + '</div><div class="group-item-sub">' + (ZONES[g.zone]||'Miðsvæðið') + ' &bull; ' + (EXP[g.exp]||'') + ' &bull; ' + (t ? t.name : 'Ekkert verkefni') + '</div></div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
-    // Ef þú breytir reynslunni hér, uppfærist listinn sjálfkrafa (renderAdminGroups er kallað í setExp)
     html += '<select class="sm" onchange="setExp(\'' + g.id + '\',+this.value)"><option value="1" ' + (g.exp==1?'selected':'') + '>Byrjandi</option><option value="2" ' + (g.exp==2?'selected':'') + '>Miðlungs</option><option value="3" ' + (g.exp==3?'selected':'') + '>Reyndur</option><option value="4" ' + (g.exp==4?'selected':'') + '>Sérflokkur</option></select>';
     html += '<select class="sm" style="max-width:200px;" onchange="assignTask(\'' + g.id + '\',this.value)">' + opts + '</select>';
     html += '<button class="btn-outline" style="font-size:12px;padding:5px 10px" onclick="startEditGroup(\'' + g.id + '\')">&#x270E; Breyta</button>';
@@ -1705,7 +1703,6 @@ function startEditTask(tid) {
   document.getElementById('taskMap').value = t.mapUrl || '';
   document.getElementById('taskZone').value = t.zone || '1';
   
-  // Setja inn Hnit og Pinna ef til staðar
   document.getElementById('taskLat').value = t.lat || '';
   document.getElementById('taskLng').value = t.lng || '';
   var statusEl = document.getElementById('adminMapStatus');
@@ -1742,8 +1739,6 @@ function cancelTaskEdit() {
   document.getElementById('taskDesc').value = '';
   document.getElementById('taskMap').value = '';
   document.getElementById('taskZone').value = '1';
-  
-  // Hreinsa kortið
   document.getElementById('taskLat').value = '';
   document.getElementById('taskLng').value = '';
   var statusEl = document.getElementById('adminMapStatus');
@@ -1771,7 +1766,6 @@ function addTask() {
   var lat = document.getElementById('taskLat').value;
   var lng = document.getElementById('taskLng').value;
   
-  // NÝTT: Búum til Google Maps link sjálfkrafa ef hann var ekki sleginn inn handvirkt
   if (!mapUrl && lat && lng) {
     mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
   }
@@ -1783,7 +1777,7 @@ function addTask() {
       if (tasks[i].id === editingTaskId) {
         tasks[i].name = name; tasks[i].diff = diff; tasks[i].loc = loc;
         tasks[i].desc = desc; tasks[i].mapUrl = mapUrl; tasks[i].zone = zone;
-        tasks[i].lat = lat; tasks[i].lng = lng; // Vistum hnitin
+        tasks[i].lat = lat; tasks[i].lng = lng;
         theTask = tasks[i];
         logHistory('edit_task', 'Breytti verkefni: ' + name, editingTaskId, name, '', '');
         break;
@@ -1801,7 +1795,7 @@ function addTask() {
   if (theTask) {
     apiCall('upsertRow', {sheet: 'tasks', row: theTask}, function() {});
     notify(editingTaskId ? 'Verkefni uppfært' : 'Verkefni bætt við');
-    cancelTaskEdit(); // Hreinsar kortið líka sjálfkrafa!
+    cancelTaskEdit();
     renderTaskList();
     renderAdminGroups(); 
     renderPublic(); 
@@ -1829,7 +1823,6 @@ function toggleTaskComplete(tid) {
       } else {
         tasks[i].completed = 'Já'; tasks[i].completedDate = todayISO();
         
-        // Finnum hvort einhver flokkur sé með þetta verkefni núna og skráum nafnið
         var assignedGroupName = 'Stjórnandi';
         for (var j = 0; j < groups.length; j++) {
           if (String(groups[j].taskId) === String(tid)) {
@@ -1854,7 +1847,6 @@ function renderTaskList() {
   var avail = [];
   var comp = [];
 
-  // --- 1. SKIPTA VERKEFNUM Í ÞRJÁ FLOKKA ---
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
     var isCompleted = (t.completed === 'Já' || t.completed === true);
@@ -1864,25 +1856,22 @@ function renderTaskList() {
       if (String(groups[j].taskId) === String(t.id)) { assignedGroup = groups[j]; break; }
     }
     
-    t._tempGroup = assignedGroup; // Geymum upplýsingar um flokkinn tímabundið
+    t._tempGroup = assignedGroup;
 
     if (isCompleted) comp.push(t);
     else if (assignedGroup) inProg.push(t);
     else avail.push(t);
   }
 
-  // --- 2. RÖÐUN FYRIR "Í VINNSLU" OG "LAUST" (Erfiðleikastig -> Nafn) ---
   function sortDiffAndName(a, b) {
     var diffA = parseInt(a.diff) || 0, diffB = parseInt(b.diff) || 0;
     var valA = (diffA === 0) ? 99 : diffA, valB = (diffB === 0) ? 99 : diffB;
     if (valA !== valB) return valA - valB;
-    // BÆTT VIÐ: String() kemur í veg fyrir að tölur krassi kerfið
     return String(a.name || '').localeCompare(String(b.name || ''), 'is');
   }
   inProg.sort(sortDiffAndName);
   avail.sort(sortDiffAndName);
 
-  // --- 3. RÖÐUN FYRIR "KLÁRAÐ" (Dagsetning [elst efst] -> Nafn) ---
   comp.sort(function(a, b) {
     var dateA = a.completedDate ? String(a.completedDate).split('T')[0] : '9999-99-99';
     var dateB = b.completedDate ? String(b.completedDate).split('T')[0] : '9999-99-99';
@@ -1890,11 +1879,10 @@ function renderTaskList() {
     if (dateA !== dateB) {
       return dateA.localeCompare(dateB); 
     }
-    // BÆTT VIÐ: String() hér líka
+
     return String(a.name || '').localeCompare(String(b.name || ''), 'is');
   });
 
-  // --- 4. BÚA TIL HTML FYRIR SPJÖLDIN ---
   function buildCardsHtml(arr, category) {
     var html = '';
     for (var k = 0; k < arr.length; k++) {
@@ -1934,7 +1922,6 @@ function renderTaskList() {
   var htmlAvailable  = buildCardsHtml(avail, 'avail');
   var htmlCompleted  = buildCardsHtml(comp, 'comp');
 
-  // --- 5. SAMSETNING Á FLIPUM OG SKJÁ ---
   var navHtml = '<div class="inner-nav" style="margin-top: 1rem; margin-bottom: 1.5rem;">';
   navHtml += '<button class="' + (currentTaskTab === 'available' ? 'active' : '') + '" onclick="switchTaskTab(\'available\')">Óklárað (' + avail.length + ')</button>';
   navHtml += '<button class="' + (currentTaskTab === 'in-progress' ? 'active' : '') + '" onclick="switchTaskTab(\'in-progress\')">Í vinnslu (' + inProg.length + ')</button>';
@@ -1958,7 +1945,6 @@ function renderTaskList() {
 
   document.getElementById('taskListAdmin').innerHTML = finalHtml;
 
-  // Stjórnum stóra kortinu
   var mapWrap = document.getElementById('allTasksMapWrap');
   if (currentTaskTab === 'map-view') {
     if (mapWrap) mapWrap.style.display = 'block';
@@ -2121,32 +2107,26 @@ function spinTheWheel(availableTasks, winningTask, callback) {
   var canvas = document.getElementById('wheelCanvas');
   var ctx = canvas.getContext('2d');
   
-  // Tryggjum að sigurvegarinn sé á hjólinu, og bætum við upp í 12 verkefni til að hjólið líti vel út
   var wheelItems = [winningTask];
   var others = availableTasks.filter(function(t) { return t.id !== winningTask.id; });
-  // Slembiröðum hinum
   others.sort(function() { return 0.5 - Math.random(); });
-  // Tökum 11 í viðbót (eða færri ef það eru ekki nógu mörg)
   var extras = others.slice(0, 11);
   wheelItems = wheelItems.concat(extras);
-  // Slembiröðum hjólinu sjálfu svo sigurvegarinn sé ekki alltaf á sama stað
   wheelItems.sort(function() { return 0.5 - Math.random(); });
   
-  // Finnum hvar sigurvegarinn lenti
   var winningIndex = wheelItems.findIndex(function(t) { return t.id === winningTask.id; });
   
   var numSlices = wheelItems.length;
   var sliceAngle = (2 * Math.PI) / numSlices;
   var colors = ['#1D9E75', '#157A5A', '#2b82cb', '#F59E0B', '#E53935', '#8B5CF6'];
 
-  // Teiknum hjólið
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   var centerX = canvas.width / 2;
   var centerY = canvas.height / 2;
   var radius = 145;
 
   for (var i = 0; i < numSlices; i++) {
-    var startAngle = i * sliceAngle - (Math.PI / 2); // Byrjum á klukkan 12
+    var startAngle = i * sliceAngle - (Math.PI / 2);
     var endAngle = startAngle + sliceAngle;
     
     ctx.beginPath();
@@ -2156,8 +2136,6 @@ function spinTheWheel(availableTasks, winningTask, callback) {
     ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
     ctx.stroke();
-    
-    // Setjum textann inn (passa að hann sé ekki of langur)
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(startAngle + (sliceAngle / 2));
@@ -2170,34 +2148,26 @@ function spinTheWheel(availableTasks, winningTask, callback) {
     ctx.restore();
   }
 
-  // Undirbúum snúning
   var degPerSlice = 360 / numSlices;
-  // Reiknum gráður til að sigurvegarinn lendi nákvæmlega uppi klukkan 12
   var targetRotation = -(winningIndex * degPerSlice) - (degPerSlice / 2) + 360; 
-  // Bætum við 5 heilum hringjum svo það snúist hratt í byrjun
   var totalRotation = targetRotation + (360 * 5); 
 
-  // Endurstillum hjólið (tökum transition af tímabundið)
   canvas.style.transition = 'none';
   canvas.style.transform = 'rotate(0deg)';
   
-  // Sýnum hjólið
   overlay.classList.add('show');
   
-  // Leyfum DOMinu að uppfæra sig, setjum svo snúninginn af stað
   setTimeout(function() {
     canvas.style.transition = 'transform 4s cubic-bezier(0.2, 0.8, 0.2, 1)';
     canvas.style.transform = 'rotate(' + totalRotation + 'deg)';
     
-    // Þegar snúningur er búinn, lokum við hjólinu og keyrum callbackið
     setTimeout(function() {
       overlay.classList.remove('show');
-      setTimeout(callback, 300); // Bíðum aðeins meðan hjólið fade-ar út
+      setTimeout(callback, 300);
     }, 4200);
   }, 50);
 }
 
-// --- INITIALIZATION ---
 document.getElementById('todayDate').textContent = getIcelandicDate(new Date());
 restoreSession();
 loadAll();
